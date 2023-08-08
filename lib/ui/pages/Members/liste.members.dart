@@ -24,7 +24,6 @@ class ListMembersPage extends StatefulWidget {
 }
 
 class _ListMembersPageState extends State<ListMembersPage> {
-  @override
   final dbHandler = locator<LocalService>();
   bool hasInternet = false;
   bool isLocalData = false;
@@ -150,14 +149,10 @@ class _ListMembersPageState extends State<ListMembersPage> {
     return Scaffold(
       backgroundColor: Defaults.blueFondCadre,
       appBar: AppBar(
-        title: Row(
+        title: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('VHM PRÉSENCE'),
-            Text(
-              '$_countMembers/$attendanceStore',
-              style: const TextStyle(color: Colors.white),
-            )
+            Text('VHM PRÉSENCE'),
           ],
         ),
         //centerTitle: true,

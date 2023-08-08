@@ -10,13 +10,13 @@ class DioExceptions implements Exception {
       case DioErrorType.cancel:
         message = "Request to API server was cancelled";
         break;
-      case DioErrorType.connectionTimeout:
+      case DioErrorType.connectTimeout:
         message = "Connection timeout with API server";
         break;
       case DioErrorType.receiveTimeout:
         message = "Receive timeout in connection with API server";
         break;
-      case DioErrorType.badResponse:
+      case DioErrorType.response:
         message = _handleError(
           dioError.response?.statusCode,
           dioError.response?.data,
@@ -25,8 +25,8 @@ class DioExceptions implements Exception {
       case DioErrorType.sendTimeout:
         message = "Send timeout in connection with API server";
         break;
-      case DioErrorType.unknown:
-        if (dioError.message!.contains("SocketException")) {
+      case DioErrorType.other:
+        if (dioError.message.contains("SocketException")) {
           message = 'No Internet';
           break;
         }

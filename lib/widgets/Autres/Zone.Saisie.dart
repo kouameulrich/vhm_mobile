@@ -5,7 +5,7 @@ import 'package:vhm_mobile/widgets/default.colors.dart';
 
 Widget ZoneSaisie(BuildContext context, TextEditingController controller) {
   return SizedBox(
-    height: 50,
+    height: 55,
     child: TextFormField(
       controller: controller,
       autocorrect: false,
@@ -28,6 +28,7 @@ Widget ZoneSaisie(BuildContext context, TextEditingController controller) {
         if (value == null || value.isEmpty) {
           return "Remplissez le champ s'il vous plait";
         }
+        return null;
       },
     ),
   );

@@ -20,8 +20,8 @@ class DioClient {
   DioClient(this._dio) {
     _dio
       ..options.baseUrl = Endpoints.baseUrl
-      ..options.connectTimeout = Endpoints.connectionTimeout as Duration?
-      ..options.receiveTimeout = Endpoints.receiveTimeout as Duration?
+      ..options.connectTimeout = Endpoints.connectionTimeout
+      ..options.receiveTimeout = Endpoints.receiveTimeout
       ..options.responseType = ResponseType.json
       ..interceptors
           .add(InterceptorsWrapper(onRequest: (options, handler) async {
