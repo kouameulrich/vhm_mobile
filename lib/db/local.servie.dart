@@ -22,13 +22,13 @@ class LocalService {
   }
 
   //Edit Members
-  UpdateMembers(Members members) async {
-    return await _repository.updateData('members', members.toJson());
+  UpdateMembers(members) async {
+    return await _repository.updateData('members', members);
   }
 
   // delete Members
-  deleteMembers(membersId) async {
-    return await _repository.deleteDataById('members', membersId);
+  deleteMembers(Members members) async {
+    return await _repository.deleteData('members', members.toJson());
   }
 
 //SAVE LEAMAN

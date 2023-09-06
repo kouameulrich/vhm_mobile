@@ -3,8 +3,6 @@ import 'package:path/path.dart';
 
 class DatabaseConnection {
   Future<Database> setDatabase() async {
-    //var directory = await getApplicationDocumentsDirectory();
-    //var path = join(directory.path, 'db_crud');
     var path = join(await getDatabasesPath(), 'db_crud');
     await deleteDatabase(path);
     var database =
@@ -18,7 +16,7 @@ class DatabaseConnection {
     await database.execute(sqlNewMembers);
 
     String sqlMembers =
-        "CREATE TABLE Members (memberId INTEGER PRIMARY KEY, memberLastName TEXT, memberFirstName TEXT, memberFullName TEXT, memberPhone TEXT, memberStatus TEXT, flag BOOLEAN);";
+        "CREATE TABLE Members (memberId INTEGER PRIMARY KEY, memberLastName TEXT, memberFirstName TEXT, memberFullName TEXT, memberPhone TEXT, memberStatus TEXT, flag INTEGER);";
     await database.execute(sqlMembers);
 
     String sqlLeamans =

@@ -47,6 +47,7 @@ class Defaults {
   static const Color blueFondCadre = Color(0xFFe8f6f9);
   static const Color leamanFondCadre = Color.fromARGB(255, 246, 232, 249);
   static const Color white = Color.fromARGB(255, 255, 255, 255);
+  static const Color blueAppBar = Color.fromRGBO(15, 81, 105, 1);
 
   static final drawerItemText = [
     'Acceuil',

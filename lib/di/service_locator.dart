@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:vhm_mobile/_api/apiService.dart';
+import 'package:vhm_mobile/_api/authService.dart';
 import 'package:vhm_mobile/_api/dioClient.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/db/database.connection.dart';
@@ -15,7 +16,7 @@ Future<void> setup() async {
   locator
       .registerSingleton(TokenStorageService(locator<FlutterSecureStorage>()));
   locator.registerSingleton(Dio());
-  //locator.registerSingleton(AuthService(locator<TokenStorageService>()));
+  locator.registerSingleton(AuthService(locator<TokenStorageService>()));
   locator.registerSingleton(DioClient(locator<Dio>()));
   locator.registerSingleton(ApiService(locator<DioClient>()));
   locator.registerSingleton(DatabaseConnection());

@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lottie/lottie.dart';
@@ -7,10 +7,13 @@ import 'package:vhm_mobile/_api/apiService.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/db/local.servie.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
+import 'package:vhm_mobile/models/dto/members.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
 import 'package:vhm_mobile/ui/pages/Members/liste.members.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:http/http.dart' as http;
+import 'package:vhm_mobile/widgets/loading.indicator.dart';
 
 class LoadMembersDataPage extends StatefulWidget {
   const LoadMembersDataPage({Key? key}) : super(key: key);
@@ -37,6 +40,10 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
     await storage.write(key: 'memberStorage', value: data);
   }
 
+  //  Future<List<Members>> getAllContract() async {
+  //   return await dbHandler.readAllMembers();
+  // }
+
   @override
   void initState() {
     //CHECKING CONNECTION
@@ -57,27 +64,13 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
       );
     });
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    // do something
-    //   getAgent().then((value) => setState((() {
-    //         _matriculeAgent = value!.id;
-    //       })));
-    //   getAllEncaissement().then((value) => {
-    //         setState(() {
-    //           _payments = value;
-    //           _countEncaissement = value.length;
-    //           _montantCollecte = _payments.toList().fold(
-    //               0, (value, element) => value.toDouble() + element.amount!);
-    //         })
-    //       });
-    // });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // backgroundColor: Defaults.appBarColor,
+        backgroundColor: Defaults.appBarColor,
         title: const Text('Données'),
         centerTitle: true,
       ),
@@ -131,7 +124,7 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
                             width: 250,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: () => loadData(),
+                              onPressed: () => loadData1(),
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       Defaults.bottomColor)),
@@ -169,129 +162,64 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
     );
   }
 
-  loadData() async {
-    hasInternet = await InternetConnectionChecker().hasConnection;
-    if (hasInternet == false) {
-      showSimpleNotification(
-        Text(
-          'Pas de connexion internet',
-          style: TextStyle(color: Colors.white, fontSize: 20),
+  loadData1() async {
+    var headersList = {'Content-Type': 'application/json'};
+    var url = Uri.parse(
+        'https://backendvhm.azurewebsites.net/api/Member/getAll?churchId=1');
+
+    var req = http.Request('GET', url);
+    req.headers.addAll(headersList);
+
+    var res = await req.send();
+    final resBody = await res.stream.bytesToString();
+
+    LoadingIndicatorDialog().show(context);
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      print(resBody);
+      List<Members> memberss = await apiService.getAllMembers();
+      for (var members in memberss) {
+        dbHandler.SaveMembers(members);
+      }
+      LoadingIndicatorDialog().dismiss();
+      return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text(
+            'SUCCESS',
+            textAlign: TextAlign.center,
+          ),
+          content: SizedBox(
+            height: 120,
+            child: Column(
+              children: [
+                Lottie.asset(
+                  'animations/success.json',
+                  repeat: true,
+                  reverse: true,
+                  fit: BoxFit.cover,
+                  height: 100,
+                ),
+                const Text(
+                  'Donnée chargé avec succès',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ListMembersPage()));
+                },
+                child: const Text('RETOUR'))
+          ],
         ),
-        background: Colors.red,
       );
     } else {
-      print('Internet');
-      setState(() {
-        isLoading = true;
-      });
-      loadResponse = await apiService.getAllMembers();
-      if (loadResponse == '') {
-        print('vide');
-        print(loadResponse);
-        showSimpleNotification(
-          Text(
-            'Echec de chargement ',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-          background: Colors.red,
-        );
-        setState(() {
-          isLoading = false;
-        });
-      } else {
-        print('non vide');
-        print(loadResponse);
-        print(loadResponse.length);
-        await writeMemberStorage(loadResponse);
-        setState(() {
-          isLoading = false;
-        });
-        showSimpleNotification(
-          Text(
-            'Données chargées',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-          background: Colors.green,
-        );
-        print('local storage');
-        Future.delayed(Duration(seconds: 3), () {
-          Navigator.pop(
-            context,
-            MaterialPageRoute(builder: (context) => ListMembersPage()),
-          );
-        });
-      }
+      print(res.reasonPhrase);
     }
   }
 }
-
-
-
-//   _transferMemberServerToLocal() async {
-//     if (hasInternet == false) {
-//       showSimpleNotification(
-//         Text(
-//           'Pas de connexion internet',
-//           style: TextStyle(color: Colors.white, fontSize: 20),
-//         ),
-//         background: Colors.red,
-//       );
-//     } else {
-//       showDialog(
-//         context: context,
-//         builder: (context) {
-//           return AlertDialog(
-//             title: const Text(
-//               'CONFIRMATION',
-//               textAlign: TextAlign.center,
-//             ),
-//             content: SizedBox(
-//               height: 210,
-//               child: Column(
-//                 children: [
-//                   Lottie.asset(
-//                     'animations/sendData.json',
-//                     repeat: true,
-//                     reverse: true,
-//                     fit: BoxFit.cover,
-//                     height: 170,
-//                   ),
-//                   const Text(
-//                     'Voulez-vous charger les données provenant du serveur ?',
-//                     textAlign: TextAlign.center,
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             actions: [
-//               TextButton(
-//                 onPressed: () {
-//                   Navigator.of(context).pop();
-//                 },
-//                 child: const Text('Non'),
-//               ),
-//               TextButton(
-//                 onPressed: () async {
-//                   try {
-//                     LoadingIndicatorDialog().show(context);
-//                     await apiService.getAllMembers();
-//                     LoadingIndicatorDialog().dismiss();
-//                     Navigator.pop(
-//                       context,
-//                       MaterialPageRoute(
-//                           builder: (context) => LoadMembersDataPage()),
-//                     );
-//                   } on DioError catch (e) {
-//                     LoadingIndicatorDialog().dismiss();
-//                     ErrorDialog().show(e);
-//                   }
-//                 },
-//                 child: const Text('Oui'),
-//               ),
-//             ],
-//           );
-//         },
-//       );
-//     }
-//   }
-// }

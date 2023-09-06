@@ -3,7 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:lottie/lottie.dart';
+import 'package:vhm_mobile/_api/apiService.dart';
+import 'package:vhm_mobile/db/local.servie.dart';
+import 'package:vhm_mobile/di/service_locator.dart';
+import 'package:vhm_mobile/models/dto/members.dart';
+import 'package:vhm_mobile/ui/pages/home.page.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
+import 'package:vhm_mobile/widgets/loading.indicator.dart';
 
 class ResetMembersDataPage extends StatefulWidget {
   const ResetMembersDataPage({super.key});
@@ -13,17 +19,20 @@ class ResetMembersDataPage extends StatefulWidget {
 }
 
 class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
-  Future resetAllMembers() async {
-    final storage = new FlutterSecureStorage();
-    // Delete all
-    await storage.deleteAll();
-  }
+  // Future resetAllMembers() async {
+  //   final storage = new FlutterSecureStorage();
+  //   // Delete all
+  //   await storage.deleteAll();
+  // }
+
+  final apiService = locator<ApiService>();
+  final dbHandler = locator<LocalService>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // backgroundColor: Defaults.appBarColor,
+        backgroundColor: Defaults.appBarColor,
         title: const Text('Réinitialisation'),
         centerTitle: true,
       ),
@@ -77,7 +86,9 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
                             width: 250,
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _submitLogin();
+                              },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       Defaults.bottomColor)),
@@ -113,5 +124,95 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _submitLogin() async {
+    LoadingIndicatorDialog().show(context);
+
+    try {
+      List<Members> _members = await apiService.getAllMembers();
+
+      for (var members in _members) {
+        await dbHandler.deleteMembers(members);
+      }
+
+      LoadingIndicatorDialog().dismiss();
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text(
+            'SUCCÈS',
+            textAlign: TextAlign.center,
+          ),
+          content: SizedBox(
+            height: 120,
+            child: Column(
+              children: [
+                Lottie.asset(
+                  'animations/success.json',
+                  repeat: true,
+                  reverse: true,
+                  fit: BoxFit.cover,
+                  height: 100,
+                ),
+                const Text(
+                  'Réinitialisation éffectué avec succès',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (_) => const HomePage()));
+                },
+                child: const Text('RETOUR'))
+          ],
+        ),
+      );
+    } catch (e) {
+      LoadingIndicatorDialog().dismiss();
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              'ERREUR',
+              textAlign: TextAlign.center,
+            ),
+            content: SizedBox(
+              height: 150,
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'animations/error-dialog.json',
+                    repeat: true,
+                    reverse: true,
+                    fit: BoxFit.cover,
+                    height: 120,
+                  ),
+                  const Text(
+                    'Erreur lors de la réinitialisation',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('RÉESSAYER'))
+            ],
+          );
+        },
+      );
+    }
   }
 }

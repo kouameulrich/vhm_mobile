@@ -41,6 +41,7 @@ class _NewMembersPageState extends State<NewMembersPage> {
     return Scaffold(
       backgroundColor: Defaults.blueFondCadre,
       appBar: AppBar(
+        backgroundColor: Defaults.blueAppBar,
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:vhm_mobile/_api/tokenStorageService.dart';
+import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 
@@ -14,7 +18,7 @@ var indexClicked = 0;
 
 class _MyDrawerState extends State<MyDrawer> {
   // final storage = locator<TokenStorageService>();
-  // late final Future<Agent?> _futureAgentConnected;
+  // late final Future<User?> _futureAgentConnected;
 
   @override
   void initState() {
@@ -46,33 +50,33 @@ class _MyDrawerState extends State<MyDrawer> {
                     const SizedBox(
                       height: 20,
                     ),
-                    FutureBuilder<User?>(
-                        //future: _futureAgentConnected,
-                        builder: (context, snapshot) {
-                      return const Column(
-                        children: [
-                          // Text(
-                          //   snapshot.hasData
-                          //       ? '${snapshot.data!.prenom} ${snapshot.data!.nom}'
-                          //       : '',
-                          //   style: GoogleFonts.sanchez(
-                          //     fontSize: 25,
-                          //     fontWeight: FontWeight.w500,
-                          //     color: Defaults.libelleColor,
-                          //   ),
-                          // ),
-                          // Text(
-                          //   snapshot.hasData
-                          //       ? '${snapshot.data!.nomUtilisateur}'
-                          //       : '',
-                          //   style: GoogleFonts.sanchez(
-                          //       fontSize: 20,
-                          //       fontWeight: FontWeight.w500,
-                          //       color: Colors.white),
-                          // ),
-                        ],
-                      );
-                    })
+                    // FutureBuilder<User?>(
+                    //   future: _futureAgentConnected,
+                    //   builder: (context, snapshot) {
+                    //     return Column(
+                    //       children: [
+                    //         Text(
+                    //             snapshot.hasData
+                    //                 ? '${snapshot.data!.lastname} ${snapshot.data!.firstname}'
+                    //                 : '',
+                    //             style: const TextStyle(
+                    //                 fontSize: 25,
+                    //                 fontWeight: FontWeight.w500,
+                    //                 color: Colors.white)),
+                    //         const SizedBox(
+                    //           height: 10,
+                    //         ),
+                    //         Text(
+                    //           snapshot.hasData ? '${snapshot.data!.email}' : '',
+                    //           style: GoogleFonts.sanchez(
+                    //               fontSize: 20,
+                    //               fontWeight: FontWeight.w500,
+                    //               color: Colors.white),
+                    //         ),
+                    //       ],
+                    //     );
+                    //   },
+                    // ),
                   ],
                 ),
               )),
@@ -82,7 +86,7 @@ class _MyDrawerState extends State<MyDrawer> {
               children: const [
                 AppDrawerTile(
                   index: 0,
-                  route: '/',
+                  route: '/home',
                 ),
                 AppDrawerTile(
                   index: 1,
@@ -107,6 +111,7 @@ class _MyDrawerState extends State<MyDrawer> {
             child: TextButton.icon(
               // <-- TextButton
               onPressed: () {
+                exit(0);
                 //storage.deleteAllToken();
                 // indexClicked = 0;
                 // Navigator.of(context).pop();

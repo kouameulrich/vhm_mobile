@@ -5,7 +5,7 @@ class Members {
   final String memberFullName;
   final String memberPhone;
   final String? memberStatus;
-  bool flag;
+  late final int flag;
 
   Members({
     required this.memberId,
@@ -14,8 +14,8 @@ class Members {
     required this.memberFullName,
     required this.memberPhone,
     required this.memberStatus,
-    required this.flag,
-  });
+    required bool flag,
+  }) : flag = flag ? 1 : 0; // Convertir le booléen en int
 
   factory Members.fromJson(Map<String, dynamic> json) => Members(
         memberId: json['memberId'],
@@ -24,7 +24,7 @@ class Members {
         memberFullName: json['memberFullName'],
         memberPhone: json['memberPhone'],
         memberStatus: json['memberStatus'],
-        flag: json['flag'],
+        flag: json['flag'] == 0, // Convertir le int en booléen
       );
 
   Map<String, dynamic> toJson() => {
@@ -34,6 +34,6 @@ class Members {
         'memberFullName': memberFullName,
         'memberPhone': memberPhone,
         'memberStatus': memberStatus,
-        'flag': flag
+        'flag': flag,
       };
 }

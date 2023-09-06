@@ -19,31 +19,31 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   HttpOverrides.global = DevHttpOverrides();
   setup();
-  runApp(const OverlaySupport.global(
-    child: MyApp(),
-  ));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      routes: {
-        // '/': (context) => const SplashScreen(),
-        // '/loginpage': (context) => LoginPage(),
-        '/': (context) => const HomePage(),
-        '/listMembers': (context) => const ListMembersPage(),
-        // '/transfert': (context) => const TransfertDonnees(),
-        // '/miseajour': (context) => const UpdateDataPage(),
-      },
-      title: 'VHM APP',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
+    return OverlaySupport.global(
+      child: MaterialApp(
+        navigatorKey: navigatorKey,
+        routes: {
+          // '/': (context) => const SplashScreen(),
+          // '/loginpage': (context) => LoginPage(),
+          '/': (context) => const HomePage(),
+          '/listMembers': (context) => const ListMembersPage(),
+          // '/transfert': (context) => const TransfertDonnees(),
+          // '/miseajour': (context) => const UpdateDataPage(),
+        },
+        title: 'VHM APP',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.green,
+        ),
+        initialRoute: '/',
       ),
-      initialRoute: '/',
     );
   }
 }
