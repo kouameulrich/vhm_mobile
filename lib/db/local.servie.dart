@@ -39,13 +39,4 @@ class LocalService {
   Future<int> SaveNewMembers(NewMembers newMembers) async {
     return await _repository.insertData('members', newMembers.toJson());
   }
-
-  Future<bool> isMemberExists(String phoneNumber) async {
-    final db = await database;
-    final count = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM newMembers WHERE memberPhone = ?',
-      [phoneNumber],
-    ));
-    return count > 0;
-  }
 }
