@@ -31,21 +31,69 @@ class LocalService {
   deleteMembers(membersId) async {
     return await _repository.deleteData('members', membersId);
   }
+
+  //LAST MEMBERS
+  Future<int> getDernierIdMembre() async {
+    try {
+      final List<Map<String, dynamic>> list =
+          await _repository.readData('members');
+
+      if (list.isNotEmpty) {
+        // Tri des membres par ID dans l'ordre décroissant pour obtenir le dernier ID.
+        list.sort((a, b) => b['id'].compareTo(a['id']));
+        return list.first['id'] as int;
+      } else {
+        return 0; // Aucun membre trouvé, retourne 0 par défaut
+      }
+    } catch (e) {
+      // Gérer les erreurs, par exemple, la base de données n'existe pas encore.
+      print('Erreur lors de la récupération du dernier ID de membre: $e');
+      return 0; // En cas d'erreur, retournez 0
+    }
+  }
+
 //SAVE LEAMAN
 
 //READ ALL LEAMAN
 
 //SAVE NEW MEMBERS
   Future<int> SaveNewMembers(NewMembers newMembers) async {
-    return await _repository.insertData('members', newMembers.toJson());
+    return await _repository.insertData('newmembers', newMembers.toJson());
   }
 
-  Future<bool> isMemberExists(String phoneNumber) async {
-    final db = await database;
-    final count = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM newMembers WHERE memberPhone = ?',
-      [phoneNumber],
-    ));
-    return count > 0;
+  //READ ALL NEW MEMBERS
+  Future<List<NewMembers>> readAllNewMembers() async {
+    List<NewMembers> newmemberss = [];
+    List<Map<String, dynamic>> list = await _repository.readData('newmembers');
+    for (var newmembers in list) {
+      newmemberss.add(NewMembers.fromJson(newmembers));
+    }
+    return newmemberss;
+  }
+
+  // DELETE NEW MEMBERS
+  deleteNewMembers(newmembersId) async {
+    return await _repository.deleteData('newMembers', newmembersId);
+  }
+
+  //NEW MEMBERS EXISTS
+  // Vérifie si un membre existe avec le numéro de téléphone donné
+  Future<bool> checkMemberExists(String phoneNumber) async {
+    try {
+      final List<Map<String, dynamic>> list =
+          await _repository.readData('members');
+      for (var member in list) {
+        if (member['memberPhone'] == phoneNumber) {
+          // Le membre existe déjà avec ce numéro de téléphone
+          return true;
+        }
+      }
+      // Aucun membre trouvé avec ce numéro de téléphone
+      return false;
+    } catch (e) {
+      // Gérer les erreurs, par exemple, la base de données n'existe pas encore.
+      print("Erreur lors de la vérification de l'existence du membre: $e");
+      return false; // En cas d'erreur, retournez false
+    }
   }
 }

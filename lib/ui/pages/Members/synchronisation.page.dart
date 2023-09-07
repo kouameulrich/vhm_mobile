@@ -1,16 +1,17 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously, unused_field
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vhm_mobile/_api/apiService.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/db/local.servie.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
+import 'package:vhm_mobile/models/dto/newMembers.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 import 'package:vhm_mobile/widgets/error.dialog.dart';
 import 'package:vhm_mobile/widgets/loading.indicator.dart';
+import 'package:connectivity/connectivity.dart';
 
 class SynchroMembersDataPage extends StatefulWidget {
   const SynchroMembersDataPage({Key? key}) : super(key: key);
@@ -27,16 +28,21 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   List<Members> _members = [];
   List<Members> _membersPoint = [];
 
+  List<NewMembers> _newmembers = [];
+
   int _countMembers = 0;
-  double _montantCollecte = 0.0;
+  int _countNewMembers = 0;
 
   Future<List<Members>> getAllMembers() async {
     return await dbHandler.readAllMembers();
   }
 
+  Future<List<NewMembers>> getAllNewMembers() async {
+    return await dbHandler.readAllNewMembers();
+  }
+
   @override
   void initState() {
-    //_futureEncaissement = getAllEncaissement();
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // do something
@@ -49,6 +55,13 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                   .where((member) => member.flag == 1)
                   .toList();
               _countMembers = _membersPoint.length;
+            })
+          });
+
+      getAllNewMembers().then((value) => {
+            setState(() {
+              _newmembers = value;
+              _countNewMembers = value.length;
             })
           });
     });
@@ -130,7 +143,7 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                             width: 250,
                             child: ElevatedButton(
                               onPressed: () {
-                                _transferRecensementsToServer();
+                                _transferMembersToServer();
                               },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
@@ -196,9 +209,7 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                                   height: 10,
                                 ),
                                 Text(
-                                  NumberFormat.currency(
-                                          decimalDigits: 0, name: '')
-                                      .format(_montantCollecte),
+                                  '$_countNewMembers',
                                   style: TextStyle(
                                       fontSize: 35,
                                       fontWeight: FontWeight.bold,
@@ -220,7 +231,9 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                           SizedBox(
                             width: 250,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _transferNewMembersToServer();
+                              },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       Defaults.bottomColor)),
@@ -252,51 +265,93 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
     );
   }
 
-  _transferRecensementsToServer() {
-    if (_members.isNotEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('Confirmation',
-                style: TextStyle(color: Defaults.blueAppBar)),
-            content: SizedBox(
-              height: 140,
-              child: Column(
-                children: [
-                  Lottie.asset(
-                    'animations/sendData.json',
-                    repeat: true,
-                    reverse: true,
-                    fit: BoxFit.cover,
-                    height: 100,
-                  ),
-                  const Text(
-                    'Voulez-vous transferer les recensements vers le serveur?',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+  _transferNewMembersToServer() async {
+    if (_newmembers.isNotEmpty) {
+      final connectivityResult = await Connectivity().checkConnectivity();
+
+      if (connectivityResult == ConnectivityResult.none) {
+        // Pas de connexion Internet
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Pas de connexion Internet',
+                  style: TextStyle(color: Defaults.blueAppBar)),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/nodata.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Vérifiez votre connexion Internet et réessayez.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            actions: [
-              TextButton(
+              actions: [
+                TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Non')),
-              TextButton(
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // Connexion Internet disponible
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Confirmation',
+                  style: TextStyle(color: Defaults.blueAppBar)),
+              content: SizedBox(
+                height: 160,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/sendData.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Voulez-vous transférer les nouveaux membres vers le serveur?',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Non'),
+                ),
+                TextButton(
                   onPressed: () async {
                     try {
                       Navigator.of(context).pop();
                       LoadingIndicatorDialog().show(context);
-                      print(_members.toString());
-                      await apiService.sendMembers(_members);
-                      //delete local data after transfering
-                      for (var members in _members) {
-                        dbHandler.deleteMembers(members.memberId);
+                      print(_newmembers.toString());
+                      await apiService.sendNewMembers(_newmembers);
+                      // Supprimer les données locales après le transfert
+                      for (var newmembers in _newmembers) {
+                        dbHandler.deleteNewMembers(newmembers.id);
                       }
-                      getAllMembers().then((value) => setState(() {
-                            _members = value;
+                      getAllNewMembers().then((value) => setState(() {
+                            _newmembers = value;
                           }));
                       LoadingIndicatorDialog().dismiss();
                     } on DioError catch (e) {
@@ -305,11 +360,114 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                       //print(e.message);
                     }
                   },
-                  child: const Text('Oui'))
-            ],
-          );
-        },
-      );
+                  child: const Text('Oui'),
+                )
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+  _transferMembersToServer() async {
+    if (_members.isNotEmpty) {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        // Pas de connexion Internet
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Pas de connexion Internet',
+                  style: TextStyle(color: Defaults.blueAppBar)),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/nodata.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Vérifiez votre connexion Internet et réessayez.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Confirmation',
+                  style: TextStyle(color: Defaults.blueAppBar)),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/sendData.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Voulez-vous transferer les membres vers le serveur?',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Non')),
+                TextButton(
+                    onPressed: () async {
+                      try {
+                        Navigator.of(context).pop();
+                        LoadingIndicatorDialog().show(context);
+                        print(_members.toString());
+                        await apiService.sendMembers(_members);
+                        //delete local data after transfering
+                        for (var members in _members) {
+                          dbHandler.deleteMembers(members.memberId);
+                        }
+                        getAllMembers().then((value) => setState(() {
+                              _members = value;
+                            }));
+                        LoadingIndicatorDialog().dismiss();
+                      } on DioError catch (e) {
+                        LoadingIndicatorDialog().dismiss();
+                        ErrorDialog().show(e);
+                        //print(e.message);
+                      }
+                    },
+                    child: const Text('Oui'))
+              ],
+            );
+          },
+        );
+      }
     }
   }
 }

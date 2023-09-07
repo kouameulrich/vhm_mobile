@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -220,8 +222,55 @@ class _NewMembersPageState extends State<NewMembersPage> {
 
   onSave() async {
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-    if (_formKey.currentState!.validate()) {
+    int dernierIdMembre = await dbHandler.getDernierIdMembre();
+
+    // Vérifiez si le membre existe déjà en fonction de certains critères, par exemple, le numéro de téléphone
+    bool memberExists =
+        await dbHandler.checkMemberExists(memberPhoneController.text);
+
+    if (memberExists) {
+      // Affichez un message d'erreur indiquant que le membre existe déjà
       showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text(
+              'Erreur',
+              style: TextStyle(color: Defaults.blueAppBar),
+            ),
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'animations/error-dialog.json',
+                    repeat: true,
+                    reverse: true,
+                    fit: BoxFit.cover,
+                    height: 120,
+                  ),
+                  const Text(
+                    'Vous êtes déjà membre .',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      if (_formKey.currentState!.validate()) {
+        // Affichez la boîte de dialogue de confirmation si le membre n'existe pas
+        showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
@@ -234,7 +283,7 @@ class _NewMembersPageState extends State<NewMembersPage> {
                 child: Column(
                   children: [
                     Lottie.asset(
-                      'animations/recap.json',
+                      'animations/success.json',
                       repeat: true,
                       reverse: true,
                       fit: BoxFit.cover,
@@ -255,27 +304,33 @@ class _NewMembersPageState extends State<NewMembersPage> {
                   child: const Text('Non'),
                 ),
                 TextButton(
-                    onPressed: () async {
-                      newMembers = NewMembers(
-                          memberLastName: membersLastNameController.text,
-                          memberFirstName: membersFistNameController.text,
-                          memberPhone: memberPhoneController.text,
-                          memberDateOfEntry: dateFormat.format(DateTime.now()),
-                          memberInvitedBy: memberInvitedByController.text,
-                          memberGender: memberGenderController.text,
-                          churchId: 1,
-                          memberTypeId: 1);
-                      await dbHandler.SaveNewMembers(newMembers!);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ListMembersPage()),
-                      );
-                    },
-                    child: const Text('Oui'))
+                  onPressed: () async {
+                    int nouvelIdMembre = dernierIdMembre + 1;
+                    newMembers = NewMembers(
+                      id: nouvelIdMembre,
+                      memberLastName: membersLastNameController.text,
+                      memberFirstName: membersFistNameController.text,
+                      memberPhone: memberPhoneController.text,
+                      memberDateOfEntry: dateFormat.format(DateTime.now()),
+                      memberInvitedBy: memberInvitedByController.text,
+                      memberGender: memberGenderController.text,
+                      churchId: 1,
+                      memberTypeId: 1,
+                    );
+                    await dbHandler.SaveNewMembers(newMembers!);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ListMembersPage()),
+                    );
+                  },
+                  child: const Text('Oui'),
+                )
               ],
             );
-          });
+          },
+        );
+      }
     }
   }
 }

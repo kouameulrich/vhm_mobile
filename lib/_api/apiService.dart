@@ -6,6 +6,8 @@ import 'package:vhm_mobile/_api/dioClient.dart';
 import 'package:vhm_mobile/_api/endpoints.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
 import 'package:vhm_mobile/models/dto/membersDto.dart';
+import 'package:vhm_mobile/models/dto/newMembers.dart';
+import 'package:vhm_mobile/models/dto/newMembersDto.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
 
 class ApiService {
@@ -29,14 +31,13 @@ class ApiService {
 
   Future<void> sendMembers(List<Members> members) async {
     final membersJson =
-        convertRecencementToMembersDto(members).map((e) => e.toJson()).toList();
-    // try{
+        convertMembersToMembersDto(members).map((e) => e.toJson()).toList();
     print(json.encode(membersJson));
     await _dioClient.post(Endpoints.sendMembers,
         data: json.encode(membersJson));
   }
 
-  List<Membersdto> convertRecencementToMembersDto(List<Members> members) {
+  List<Membersdto> convertMembersToMembersDto(List<Members> members) {
     List<Membersdto> membersDto = [];
     for (var m in members) {
       Membersdto m1 = Membersdto(
@@ -51,5 +52,32 @@ class ApiService {
       membersDto.add(m1);
     }
     return membersDto;
+  }
+
+  Future<void> sendNewMembers(List<NewMembers> newmembers) async {
+    final newmembersJson = convertNewMembersToNewMembersDto(newmembers)
+        .map((e) => e.toJson())
+        .toList();
+    print(json.encode(newmembersJson));
+    await _dioClient.post(Endpoints.sendNewMembers,
+        data: json.encode(newmembersJson));
+  }
+
+  List<NewMembersdto> convertNewMembersToNewMembersDto(
+      List<NewMembers> newmembers) {
+    List<NewMembersdto> newmembersDto = [];
+    for (var nm in newmembers) {
+      NewMembersdto nm1 = NewMembersdto(
+          memberLastName: nm.memberLastName,
+          memberFirstName: nm.memberFirstName,
+          memberPhone: nm.memberPhone,
+          memberDateOfEntry: nm.memberDateOfEntry,
+          memberInvitedBy: nm.memberInvitedBy,
+          memberGender: nm.memberGender,
+          churchId: nm.churchId,
+          memberTypeId: nm.memberTypeId);
+      newmembersDto.add(nm1);
+    }
+    return newmembersDto;
   }
 }

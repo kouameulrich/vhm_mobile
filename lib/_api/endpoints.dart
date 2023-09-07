@@ -10,5 +10,7 @@ class Endpoints {
   // connectTimeout
   static const int connectionTimeout = 15000;
 
-  static const String sendMembers = '/api/Member/add';
+  static const String sendMembers = 'api/EventMember/mobileAdd';
+
+  static const String sendNewMembers = 'api/Member/add';
 }

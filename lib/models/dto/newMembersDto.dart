@@ -1,5 +1,4 @@
-class NewMembers {
-  int id = 0;
+class NewMembersdto {
   final String memberLastName;
   final String memberFirstName;
   final String memberPhone;
@@ -9,8 +8,7 @@ class NewMembers {
   final int churchId;
   final int memberTypeId;
 
-  NewMembers({
-    required this.id,
+  NewMembersdto({
     required this.memberLastName,
     required this.memberFirstName,
     required this.memberPhone,
@@ -21,8 +19,7 @@ class NewMembers {
     required this.memberTypeId,
   });
 
-  factory NewMembers.fromJson(Map<String, dynamic> json) => NewMembers(
-        id: json['id'],
+  factory NewMembersdto.fromJson(Map<String, dynamic> json) => NewMembersdto(
         memberLastName: json['memberLastName'],
         memberFirstName: json['memberFirstName'],
         memberPhone: json['memberPhone'],
@@ -34,7 +31,6 @@ class NewMembers {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
         'memberLastName': memberLastName,
         'memberFirstName': memberFirstName,
         'memberPhone': memberPhone,
