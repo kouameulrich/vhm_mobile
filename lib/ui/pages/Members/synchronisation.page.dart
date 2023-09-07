@@ -1,17 +1,16 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously, unused_field
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-import 'package:http/http.dart' as http;
 import 'package:vhm_mobile/_api/apiService.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/db/local.servie.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
-import 'package:vhm_mobile/models/dto/user.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
-import 'package:vhm_mobile/widgets/mydrawer.dart';
+import 'package:vhm_mobile/widgets/error.dialog.dart';
+import 'package:vhm_mobile/widgets/loading.indicator.dart';
 
 class SynchroMembersDataPage extends StatefulWidget {
   const SynchroMembersDataPage({Key? key}) : super(key: key);
@@ -25,22 +24,14 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   final apiService = locator<ApiService>();
   final storage = locator<TokenStorageService>();
 
-  // List<Members> _payments = [];
-  // final List<Members> _facturePayments = [];
+  List<Members> _members = [];
+  List<Members> _membersPoint = [];
 
-  int _countEncaissement = 0;
+  int _countMembers = 0;
   double _montantCollecte = 0.0;
 
-  String userid = '';
-
-  // Future<List<Payment>>? _futureEncaissement;
-
-  // Future<List<Payment>> getAllEncaissement() async {
-  //   return await dbHandler.readAllPayment();
-  // }
-
-  Future<User?> getAgent() async {
-    return await storage.retrieveAgentConnected();
+  Future<List<Members>> getAllMembers() async {
+    return await dbHandler.readAllMembers();
   }
 
   @override
@@ -49,15 +40,17 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // do something
-      getAgent().then((value) => userid = value!.id!);
-      // getAllEncaissement().then((value) => {
-      //       setState(() {
-      //         _payments = value;
-      //         _countEncaissement = value.length;
-      //         _montantCollecte = _payments.toList().fold(
-      //             0, (value, element) => value.toDouble() + element.amount!);
-      //       })
-      //     });
+      getAllMembers().then((value) => {
+            setState(() {
+              _members = value;
+              // Filtrer les membres dont le flag est passé de 0 à 1
+              _membersPoint = value
+                  // ignore: unrelated_type_equality_checks
+                  .where((member) => member.flag == 1)
+                  .toList();
+              _countMembers = _membersPoint.length;
+            })
+          });
     });
   }
 
@@ -115,9 +108,7 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                                   height: 10,
                                 ),
                                 Text(
-                                  NumberFormat.currency(
-                                          decimalDigits: 0, name: '')
-                                      .format(_montantCollecte),
+                                  '$_countMembers',
                                   style: TextStyle(
                                       fontSize: 35,
                                       fontWeight: FontWeight.bold,
@@ -138,7 +129,9 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                           SizedBox(
                             width: 250,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _transferRecensementsToServer();
+                              },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       Defaults.bottomColor)),
@@ -259,111 +252,64 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
     );
   }
 
-  // void sendData() async {
-  //   var headersList = {
-  //     'Accept': '*/*',
-  //     'Content-Type': 'application/json',
-  //   };
-  //   var url =
-  //       Uri.parse('http://192.168.1.12:8080/api/public/bulkPayments/$userid');
-
-  //   // Assurez-vous que _payments n'est pas vide avant de continuer
-  //   if (_payments.isNotEmpty) {
-  //     var body = [];
-
-  //     // Parcourir chaque paiement et les ajouter à la liste body
-  //     for (var payment in _payments) {
-  //       body.add({
-  //         "agent": {"id": payment.},
-  //         "contract": {"id": payment.contract},
-  //         "amount": payment.amount,
-  //         "paymentDate": payment.paymentDate.toString()
-  //       });
-  //     }
-
-  //     var req = http.Request('POST', url);
-  //     req.headers.addAll(headersList);
-  //     req.body = json.encode(body);
-
-  //     var res = await req.send();
-
-  //     ///-------- POPU UP OF SUCCESS ---------//
-  //     if (res.statusCode >= 200 && res.statusCode < 300) {
-  //       return showDialog(
-  //         context: context,
-  //         builder: (context) => AlertDialog(
-  //           title: const Text(
-  //             'SUCCESS',
-  //             textAlign: TextAlign.center,
-  //           ),
-  //           content: SizedBox(
-  //             height: 120,
-  //             child: Column(
-  //               children: [
-  //                 Lottie.asset(
-  //                   'animations/success.json',
-  //                   repeat: true,
-  //                   reverse: true,
-  //                   fit: BoxFit.cover,
-  //                   height: 100,
-  //                 ),
-  //                 const Text(
-  //                   'Payment send Successfuly',
-  //                   textAlign: TextAlign.center,
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //           actions: [
-  //             TextButton(
-  //                 onPressed: () {
-  //                   Navigator.push(context,
-  //                       MaterialPageRoute(builder: (_) => const HomePage()));
-  //                 },
-  //                 child: const Text('GO BACK'))
-  //           ],
-  //         ),
-  //       );
-  //     } else {
-  //       setState(() {
-  //         showDialog(
-  //           context: context,
-  //           builder: (context) => AlertDialog(
-  //             title: const Text(
-  //               'ERROR',
-  //               textAlign: TextAlign.center,
-  //             ),
-  //             content: SizedBox(
-  //               height: 120,
-  //               child: Column(
-  //                 children: [
-  //                   Lottie.asset(
-  //                     'animations/error-dialog.json',
-  //                     repeat: true,
-  //                     reverse: true,
-  //                     fit: BoxFit.cover,
-  //                     height: 100,
-  //                   ),
-  //                   const Text(
-  //                     'Error in Payment Data',
-  //                     textAlign: TextAlign.center,
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //             actions: [
-  //               TextButton(
-  //                   onPressed: () {
-  //                     Navigator.of(context).pop();
-  //                   },
-  //                   child: const Text('Retry'))
-  //             ],
-  //           ),
-  //         );
-  //       });
-  //     }
-  //   } else {
-  //     print("La liste _payments est vide.");
-  //   }
-  // }
+  _transferRecensementsToServer() {
+    if (_members.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Confirmation',
+                style: TextStyle(color: Defaults.blueAppBar)),
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'animations/sendData.json',
+                    repeat: true,
+                    reverse: true,
+                    fit: BoxFit.cover,
+                    height: 100,
+                  ),
+                  const Text(
+                    'Voulez-vous transferer les recensements vers le serveur?',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Non')),
+              TextButton(
+                  onPressed: () async {
+                    try {
+                      Navigator.of(context).pop();
+                      LoadingIndicatorDialog().show(context);
+                      print(_members.toString());
+                      await apiService.sendMembers(_members);
+                      //delete local data after transfering
+                      for (var members in _members) {
+                        dbHandler.deleteMembers(members.memberId);
+                      }
+                      getAllMembers().then((value) => setState(() {
+                            _members = value;
+                          }));
+                      LoadingIndicatorDialog().dismiss();
+                    } on DioError catch (e) {
+                      LoadingIndicatorDialog().dismiss();
+                      ErrorDialog().show(e);
+                      //print(e.message);
+                    }
+                  },
+                  child: const Text('Oui'))
+            ],
+          );
+        },
+      );
+    }
+  }
 }

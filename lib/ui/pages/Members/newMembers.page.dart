@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
+import 'package:vhm_mobile/db/local.servie.dart';
+import 'package:vhm_mobile/di/service_locator.dart';
+import 'package:vhm_mobile/models/dto/newMembers.dart';
+import 'package:vhm_mobile/ui/pages/Members/liste.members.dart';
 import 'package:vhm_mobile/widgets/Autres/Zone.Saisie.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 
@@ -11,6 +17,9 @@ class NewMembersPage extends StatefulWidget {
 
 class _NewMembersPageState extends State<NewMembersPage> {
   final _formKey = GlobalKey<FormState>();
+  final dbHandler = locator<LocalService>();
+
+  NewMembers? newMembers;
 
   TextEditingController _selectedValue = TextEditingController();
   TextEditingController membersFistNameController = TextEditingController();
@@ -18,7 +27,6 @@ class _NewMembersPageState extends State<NewMembersPage> {
   TextEditingController memberPhoneController = TextEditingController();
   TextEditingController memberInvitedByController = TextEditingController();
   TextEditingController memberGenderController = TextEditingController();
-  TextEditingController memberDateOfEntry = TextEditingController();
   List<String> listOfGender = [
     'Homme',
     'Femme',
@@ -33,7 +41,6 @@ class _NewMembersPageState extends State<NewMembersPage> {
     memberPhoneController.dispose();
     memberInvitedByController.dispose();
     memberGenderController.dispose();
-    memberDateOfEntry.dispose();
     super.dispose();
   }
 
@@ -67,7 +74,7 @@ class _NewMembersPageState extends State<NewMembersPage> {
                         child: Column(
                           children: [
                             // --------------- CHAMP DE SAISIE 1 ---------- //
-                            Align(
+                            const Align(
                                 alignment: Alignment.topLeft,
                                 child: Text('Saisissez votre nom')),
 
@@ -165,6 +172,38 @@ class _NewMembersPageState extends State<NewMembersPage> {
                                 }).toList(),
                               ),
                             ),
+
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  bottom: 15, left: 0, right: 0, top: 15),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  onSave();
+                                },
+                                style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(
+                                        Defaults.bluePrincipal)),
+                                child: const Padding(
+                                  padding: EdgeInsets.only(
+                                      bottom: 15, left: 0, right: 0, top: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.save_alt_rounded,
+                                        color: Defaults.white,
+                                      ),
+                                      Text(
+                                        'Valider',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            color: Defaults.white),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            )
                           ],
                         ),
                       ),
@@ -177,5 +216,66 @@ class _NewMembersPageState extends State<NewMembersPage> {
         ),
       ),
     );
+  }
+
+  onSave() async {
+    DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
+    if (_formKey.currentState!.validate()) {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text(
+                'Alerte Nouvelle Personne',
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                height: 150,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/recap.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 110,
+                    ),
+                    const Text(
+                      'Voulez-vous valider votre inscription ?',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Non'),
+                ),
+                TextButton(
+                    onPressed: () async {
+                      newMembers = NewMembers(
+                          memberLastName: membersLastNameController.text,
+                          memberFirstName: membersFistNameController.text,
+                          memberPhone: memberPhoneController.text,
+                          memberDateOfEntry: dateFormat.format(DateTime.now()),
+                          memberInvitedBy: memberInvitedByController.text,
+                          memberGender: memberGenderController.text,
+                          churchId: 1,
+                          memberTypeId: 1);
+                      await dbHandler.SaveNewMembers(newMembers!);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ListMembersPage()),
+                      );
+                    },
+                    child: const Text('Oui'))
+              ],
+            );
+          });
+    }
   }
 }

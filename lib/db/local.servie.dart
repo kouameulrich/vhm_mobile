@@ -1,5 +1,6 @@
 import 'package:vhm_mobile/db/repository.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
+import 'package:vhm_mobile/models/dto/newMembers.dart';
 
 class LocalService {
   final Repository _repository;
@@ -22,18 +23,29 @@ class LocalService {
   }
 
   //Edit Members
-  UpdateMembers(members) async {
-    return await _repository.updateData('members', members);
+  updateMembers(Members members) async {
+    return await _repository.updateData('members', members.toJson());
   }
 
   // delete Members
-  deleteMembers(Members members) async {
-    return await _repository.deleteData('members', members.toJson());
+  deleteMembers(membersId) async {
+    return await _repository.deleteData('members', membersId);
   }
-
 //SAVE LEAMAN
 
 //READ ALL LEAMAN
 
 //SAVE NEW MEMBERS
+  Future<int> SaveNewMembers(NewMembers newMembers) async {
+    return await _repository.insertData('members', newMembers.toJson());
+  }
+
+  Future<bool> isMemberExists(String phoneNumber) async {
+    final db = await database;
+    final count = Sqflite.firstIntValue(await db.rawQuery(
+      'SELECT COUNT(*) FROM newMembers WHERE memberPhone = ?',
+      [phoneNumber],
+    ));
+    return count > 0;
+  }
 }

@@ -4,9 +4,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:overlay_support/overlay_support.dart';
+import 'package:vhm_mobile/_api/apiService.dart';
 import 'package:vhm_mobile/db/local.servie.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
@@ -25,64 +24,18 @@ class ListMembersPage extends StatefulWidget {
 
 class _ListMembersPageState extends State<ListMembersPage> {
   final dbHandler = locator<LocalService>();
+  final apiService = locator<ApiService>();
 
   String? _selectContract;
   List<Members> _members = [];
   Members? members;
+  // Utilisez un Map pour stocker l'état (activé/désactivé) de chaque membre
+  Map<int, bool> memberButtonStates = {};
 
   TextEditingController searchController = TextEditingController();
 
-  Future<List<Members>> getAllContract() async {
+  Future<List<Members>> getAllMembers() async {
     return await dbHandler.readAllMembers();
-  }
-
-  Future<void> writePresenceStorage(Members member, int memberLine) async {
-    final storage = FlutterSecureStorage();
-
-    // Mise à jour du membre dans la liste
-    final data = await storage.read(key: 'memberStorage');
-    final List<dynamic> membersData = jsonDecode(data!) ?? [];
-    final memberList =
-        membersData.map((json) => Members.fromJson(json)).toList();
-
-    memberList[memberLine] = member;
-
-    final listUpdate = jsonEncode(memberList);
-    await storage.write(key: 'memberStorage', value: listUpdate);
-
-    // Écrire le score de présence dans le stockage local
-    final checkAttendanceStore =
-        await storage.containsKey(key: 'presenceStorage');
-    final checkAttendanceIdStore =
-        await storage.containsKey(key: 'presenceIdStorage');
-
-    if (checkAttendanceStore == false || checkAttendanceIdStore == false) {
-      member.flag = 1; // Supposons que 1 signifie "présent"
-
-      final dataEncoded = json.encode([member]);
-      await storage.write(key: 'presenceStorage', value: dataEncoded);
-
-      final dataIdEncoded = json.encode([member.memberId]);
-      await storage.write(key: 'presenceIdStorage', value: dataIdEncoded);
-    } else {
-      final readAttendanceData = await storage.read(key: 'presenceStorage');
-      final List<dynamic> decodeData = jsonDecode(readAttendanceData!) ?? [];
-      final List<Members> dataToList =
-          decodeData.map((json) => Members.fromJson(json)).toList();
-
-      final readAttendanceIdData = await storage.read(key: 'presenceIdStorage');
-      final List<dynamic> decodeIdData =
-          jsonDecode(readAttendanceIdData!) ?? [];
-
-      dataToList.add(member);
-      decodeIdData.add(member.memberId);
-
-      final dataEncoded = json.encode(dataToList);
-      await storage.write(key: 'presenceStorage', value: dataEncoded);
-
-      final dataIdEncoded = json.encode(decodeIdData);
-      await storage.write(key: 'presenceIdStorage', value: dataIdEncoded);
-    }
   }
 
   @override
@@ -91,9 +44,13 @@ class _ListMembersPageState extends State<ListMembersPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('------- DATA -------');
 
-      getAllContract().then((value) => setState(() {
+      getAllMembers().then((value) => setState(() {
             _members = value;
             // _contracts.sort();
+            // Initialisez l'état de chaque membre à true (bouton activé)
+            for (var member in _members) {
+              memberButtonStates[member.memberId] = true;
+            }
           }));
     });
   }
@@ -160,6 +117,27 @@ class _ListMembersPageState extends State<ListMembersPage> {
         decoration: const BoxDecoration(color: Defaults.blueFondCadre),
         child: Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 15.0, 15.0, 8.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.redAccent,
+                    ),
+                    child: Text('Nouvelle Personne'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const NewMembersPage()),
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.only(
                   left: 20, right: 10, top: 15, bottom: 15),
@@ -171,7 +149,7 @@ class _ListMembersPageState extends State<ListMembersPage> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    getAllContract().then((memberss) => {
+                    getAllMembers().then((memberss) => {
                           _members = memberss
                               .where((element) =>
                                   element.memberFirstName!
@@ -249,51 +227,74 @@ class _ListMembersPageState extends State<ListMembersPage> {
                           ),
                           trailing: ElevatedButton(
                             child: Text('Valider'),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) => AlertDialog(
-                                  title: Text('Alerte Présence'),
-                                  content: SizedBox(
-                                    height: 140,
-                                    child: Column(
-                                      children: [
-                                        Lottie.asset(
-                                          'animations/read.json',
-                                          repeat: true,
-                                          reverse: true,
-                                          fit: BoxFit.cover,
-                                          height: 100,
+                            onPressed: !memberButtonStates[
+                                    _members[index].memberId]!
+                                ? null
+                                : () async {
+                                    showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) =>
+                                          AlertDialog(
+                                        title: Text('Alerte Présence'),
+                                        content: SizedBox(
+                                          height: 140,
+                                          child: Column(
+                                            children: [
+                                              Lottie.asset(
+                                                'animations/read.json',
+                                                repeat: true,
+                                                reverse: true,
+                                                fit: BoxFit.cover,
+                                                height: 100,
+                                              ),
+                                              const Text(
+                                                'Voulez-vous confirmer votre présence ?',
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        const Text(
-                                          'Voulez-vous confirmer votre présence ?',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'Non'),
-                                      child: Text('Non'),
-                                    ),
-                                    TextButton(
-                                      child: Text('Oui'),
-                                      onPressed: () async {
-                                        setState(() {
-                                          _members[index].flag =
-                                              1; // Supposons que 1 signifie "présent"
-                                        });
-                                        Navigator.pop(context, 'Oui');
-                                        await writePresenceStorage(
-                                            _members[index], memberLine);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, 'Non'),
+                                            child: Text('Non'),
+                                          ),
+                                          TextButton(
+                                            child: Text('Oui'),
+                                            onPressed: () async {
+                                              setState(() {
+                                                memberButtonStates[
+                                                        _members[index]
+                                                            .memberId] =
+                                                    false; // Désactivez le bouton
+                                              });
+
+                                              // Mettez à jour le membre avec le nouveau drapeau
+                                              _members[index].flag =
+                                                  1; // Assurez-vous que '1' est le nouveau drapeau
+
+                                              try {
+                                                // Appelez la méthode updateMembers pour mettre à jour le membre sur le serveur
+                                                // await apiService.updateMembers(
+                                                //     _members[index]);
+
+                                                // Vous pouvez également mettre à jour le membre localement si nécessaire
+                                                await dbHandler.updateMembers(
+                                                    _members[index]);
+
+                                                Navigator.pop(context, 'Oui');
+                                              } catch (e) {
+                                                // Gérez les erreurs en conséquence
+                                                print(
+                                                    'Erreur lors de la mise à jour du membre : $e');
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                           ),
                         ),
                       );

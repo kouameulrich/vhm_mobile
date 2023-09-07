@@ -3,7 +3,9 @@
 import 'dart:convert';
 
 import 'package:vhm_mobile/_api/dioClient.dart';
+import 'package:vhm_mobile/_api/endpoints.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
+import 'package:vhm_mobile/models/dto/membersDto.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
 
 class ApiService {
@@ -23,5 +25,31 @@ class ApiService {
     List<dynamic> data = response.data;
     List<Members> member = data.map((e) => Members.fromJson(e)).toList();
     return member;
+  }
+
+  Future<void> sendMembers(List<Members> members) async {
+    final membersJson =
+        convertRecencementToMembersDto(members).map((e) => e.toJson()).toList();
+    // try{
+    print(json.encode(membersJson));
+    await _dioClient.post(Endpoints.sendMembers,
+        data: json.encode(membersJson));
+  }
+
+  List<Membersdto> convertRecencementToMembersDto(List<Members> members) {
+    List<Membersdto> membersDto = [];
+    for (var m in members) {
+      Membersdto m1 = Membersdto(
+        memberId: m.memberId,
+        memberLastName: m.memberLastName,
+        memberFirstName: m.memberFirstName,
+        memberFullName: m.memberFullName,
+        memberPhone: m.memberPhone,
+        memberStatus: m.memberStatus,
+        flag: m.flag == 0 ? false : true,
+      );
+      membersDto.add(m1);
+    }
+    return membersDto;
   }
 }
