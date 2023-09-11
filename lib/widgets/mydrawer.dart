@@ -17,18 +17,10 @@ class MyDrawer extends StatefulWidget {
 var indexClicked = 0;
 
 class _MyDrawerState extends State<MyDrawer> {
-  // final storage = locator<TokenStorageService>();
-  // late final Future<User?> _futureAgentConnected;
-
   @override
   void initState() {
-    // _futureAgentConnected = getAgent();
     super.initState();
   }
-
-  // Future<Agent?> getAgent() async {
-  //   return await storage.retrieveAgentConnected();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -50,33 +42,6 @@ class _MyDrawerState extends State<MyDrawer> {
                     const SizedBox(
                       height: 20,
                     ),
-                    // FutureBuilder<User?>(
-                    //   future: _futureAgentConnected,
-                    //   builder: (context, snapshot) {
-                    //     return Column(
-                    //       children: [
-                    //         Text(
-                    //             snapshot.hasData
-                    //                 ? '${snapshot.data!.lastname} ${snapshot.data!.firstname}'
-                    //                 : '',
-                    //             style: const TextStyle(
-                    //                 fontSize: 25,
-                    //                 fontWeight: FontWeight.w500,
-                    //                 color: Colors.white)),
-                    //         const SizedBox(
-                    //           height: 10,
-                    //         ),
-                    //         Text(
-                    //           snapshot.hasData ? '${snapshot.data!.email}' : '',
-                    //           style: GoogleFonts.sanchez(
-                    //               fontSize: 20,
-                    //               fontWeight: FontWeight.w500,
-                    //               color: Colors.white),
-                    //         ),
-                    //       ],
-                    //     );
-                    //   },
-                    // ),
                   ],
                 ),
               )),
@@ -112,11 +77,6 @@ class _MyDrawerState extends State<MyDrawer> {
               // <-- TextButton
               onPressed: () {
                 exit(0);
-                //storage.deleteAllToken();
-                // indexClicked = 0;
-                // Navigator.of(context).pop();
-                // Navigator.push(
-                //     context, MaterialPageRoute(builder: (_) => LoginPage()));
               },
               icon: const Icon(
                 Icons.power_settings_new_sharp,

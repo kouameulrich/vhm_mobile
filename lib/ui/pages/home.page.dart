@@ -1,11 +1,10 @@
 // ignore_for_file: sort_child_properties_last
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
-import 'package:vhm_mobile/widgets/HomePage/VHM.HP.dart';
-import 'package:vhm_mobile/widgets/HomePage/leamanHP.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 import 'package:vhm_mobile/widgets/mydrawer.dart';
 
@@ -18,76 +17,140 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final storage = locator<TokenStorageService>();
-  late Future<User?> _futureAgentConnected;
   bool ligth = true;
   late Future<User> userFuture;
 
   @override
   void initState() {
-    _futureAgentConnected = getAgent();
     super.initState();
-  }
-
-  Future<User?> getAgent() async {
-    return await storage.retrieveAgentConnected();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Defaults.blueFondCadre,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: AppBar(
-          backgroundColor: Defaults.bluePrincipal,
-          centerTitle: false,
-          title: const Column(
-            children: [
-              Text(
-                'Accueil',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            CircleAvatar(
-              backgroundColor: Colors.yellowAccent[500],
-              radius: 20,
-              child: SizedBox(
-                height: 100,
-                child: Image.asset(
-                  'images/logo_vhm_blanc.png',
-                ),
+      backgroundColor: Defaults.white,
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Defaults.appBarColor,
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(50),
               ),
             ),
-          ],
-        ),
-      ),
-      drawer: const MyDrawer(),
-      body: Column(
-        children: [
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 15,
-              childAspectRatio: .95,
-              mainAxisSpacing: 20,
+            child: const Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: VHMHP(context),
+                SizedBox(height: 60),
+                ListTile(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 30),
+                  title: Text(
+                    'Welcome to',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 25,
+                        color: Defaults.white),
+                  ),
+                  subtitle: Text('VHM Mobile App',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Colors.grey)),
+                  trailing: CircleAvatar(
+                    radius: 30,
+                    backgroundImage: AssetImage('images/logo_vhm_blanc.png'),
+                  ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: LeamanHP(context),
-                ),
+                SizedBox(height: 30)
               ],
             ),
           ),
+          Container(
+            color: Defaults.appBarColor,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.only(topLeft: Radius.circular(200))),
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 40,
+                mainAxisSpacing: 30,
+                children: [
+                  itemDashboard(
+                    'Pointage',
+                    CupertinoIcons.pencil,
+                    Defaults.greenMenuColor,
+                    () {
+                      // Navigation vers la page de face
+                      Navigator.pushNamed(context, '/listMembers');
+                    },
+                  ),
+                  itemDashboard(
+                    'Face',
+                    CupertinoIcons.person_2_alt,
+                    Defaults.leamanPrincipal,
+                    () {
+                      // Navigation vers la page de face
+                      // Navigator.pushNamed(context, '/listMembers');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20)
         ],
+      ),
+    );
+  }
+
+  itemDashboard(
+    String title,
+    IconData iconData,
+    Color background,
+    Function() onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              offset: const Offset(0, 5),
+              color: Theme.of(context).primaryColor.withOpacity(.2),
+              spreadRadius: 2,
+              blurRadius: 5,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: background,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                iconData,
+                color: Colors.white,
+                size: 36, // Ajustez la taille ici selon vos besoins
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title.toUpperCase(),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:vhm_mobile/_api/dioClient.dart';
 import 'package:vhm_mobile/_api/endpoints.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
@@ -30,29 +31,45 @@ class ApiService {
   }
 
   Future<void> sendMembers(List<Members> members) async {
-    final membersJson =
-        convertMembersToMembersDto(members).map((e) => e.toJson()).toList();
-    print(json.encode(membersJson));
-    await _dioClient.post(Endpoints.sendMembers,
-        data: json.encode(membersJson));
+    final List<Map<String, dynamic>> membersJson = members.map((memberId) {
+      return {
+        "eventMemberJoinDate": null,
+        "eventMemberJoinDay": null,
+        "eventMemberJoinMonth": null,
+        "eventMemberJoinYear": null,
+        "eventId": null,
+        "memberId": memberId,
+        "churchId": 1,
+      };
+    }).toList();
+
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+    };
+
+    await _dioClient.post(
+      Endpoints.sendMembers,
+      data: json.encode(membersJson),
+      options: Options(headers: headers), // Ajoutez les en-têtes ici
+    );
   }
 
-  List<Membersdto> convertMembersToMembersDto(List<Members> members) {
-    List<Membersdto> membersDto = [];
-    for (var m in members) {
-      Membersdto m1 = Membersdto(
-        memberId: m.memberId,
-        memberLastName: m.memberLastName,
-        memberFirstName: m.memberFirstName,
-        memberFullName: m.memberFullName,
-        memberPhone: m.memberPhone,
-        memberStatus: m.memberStatus,
-        flag: m.flag == 0 ? false : true,
-      );
-      membersDto.add(m1);
-    }
-    return membersDto;
-  }
+  // List<Membersdto> convertMembersToMembersDto(List<Members> members) {
+  //   List<Membersdto> membersDto = [];
+  //   for (var m in members) {
+  //     Membersdto m1 = Membersdto(
+  //       memberId: m.memberId,
+  //       memberLastName: m.memberLastName,
+  //       memberFirstName: m.memberFirstName,
+  //       memberFullName: m.memberFullName,
+  //       memberPhone: m.memberPhone,
+  //       memberStatus: m.memberStatus,
+  //       flag: m.flag == 0 ? false : true,
+  //     );
+  //     membersDto.add(m1);
+  //   }
+  //   return membersDto;
+  // }
 
   Future<void> sendNewMembers(List<NewMembers> newmembers) async {
     final newmembersJson = convertNewMembersToNewMembersDto(newmembers)
