@@ -50,7 +50,7 @@ class ApiService {
     await _dioClient.post(
       Endpoints.sendMembers,
       data: json.encode(membersJson),
-      options: Options(headers: headers), // Ajoutez les en-têtes ici
+      options: Options(headers: headers),
     );
   }
 
