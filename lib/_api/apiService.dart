@@ -30,46 +30,69 @@ class ApiService {
     return member;
   }
 
+  Future<List<NewMembers>> storeEventGuest() async {
+    final response = await _dioClient.post(Endpoints.AddEnventGuest);
+    List<NewMembers> newmembers =
+        (response.data as List).map((e) => NewMembers.fromJson(e)).toList();
+    return newmembers;
+  }
+
   Future<void> sendMembers(List<Members> members) async {
-    final List<Map<String, dynamic>> membersJson = members.map((memberId) {
-      return {
-        "eventMemberJoinDate": null,
-        "eventMemberJoinDay": null,
-        "eventMemberJoinMonth": null,
-        "eventMemberJoinYear": null,
-        "eventId": null,
-        "memberId": memberId,
-        "churchId": 1,
-      };
-    }).toList();
+    final membersJson =
+        convertMembersToMembersDto(members).map((e) => e.toJson()).toList();
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json; charset=UTF-8',
     };
 
-    await _dioClient.post(
+    final response = await _dioClient.post(
       Endpoints.sendMembers,
       data: json.encode(membersJson),
       options: Options(headers: headers),
     );
+
+    if (response.statusCode == 200) {
+      final sendResponse = response.data;
+      if (sendResponse != "") {
+        // Add EventGuest
+        final Map<String, String> headers = {
+          'Content-Type': 'application/json; charset=UTF-8',
+        };
+
+        final response = await _dioClient.post(
+          Endpoints.sendNewMembers,
+          data: json.encode({
+            "eventGuestJoinDate": null,
+            "eventGuestJoinDay": null,
+            "eventGuestJoinMonth": null,
+            "eventGuestJoinYear": null,
+            "eventId": null,
+            "memberId": sendResponse,
+            "churchId":
+                1, // Vous pouvez spécifier la valeur appropriée pour churchId ici
+          }),
+          options: Options(headers: headers),
+        );
+      }
+    }
   }
 
-  // List<Membersdto> convertMembersToMembersDto(List<Members> members) {
-  //   List<Membersdto> membersDto = [];
-  //   for (var m in members) {
-  //     Membersdto m1 = Membersdto(
-  //       memberId: m.memberId,
-  //       memberLastName: m.memberLastName,
-  //       memberFirstName: m.memberFirstName,
-  //       memberFullName: m.memberFullName,
-  //       memberPhone: m.memberPhone,
-  //       memberStatus: m.memberStatus,
-  //       flag: m.flag == 0 ? false : true,
-  //     );
-  //     membersDto.add(m1);
-  //   }
-  //   return membersDto;
-  // }
+  List<Membersdto> convertMembersToMembersDto(List<Members> members) {
+    List<Membersdto> membersDto = [];
+    for (var m in members) {
+      Membersdto m1 = Membersdto(
+        memberId: m.memberId,
+        memberLastName: m.memberLastName,
+        memberFirstName: m.memberFirstName,
+        memberFullName: m.memberFullName,
+        memberPhone: m.memberPhone,
+        memberStatus: m.memberStatus,
+        flag: m.flag == 0 ? false : true,
+      );
+      membersDto.add(m1);
+    }
+    return membersDto;
+  }
 
   Future<void> sendNewMembers(List<NewMembers> newmembers) async {
     final newmembersJson = convertNewMembersToNewMembersDto(newmembers)
