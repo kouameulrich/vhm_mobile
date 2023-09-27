@@ -37,9 +37,10 @@ class ApiService {
     return newmembers;
   }
 
-  Future<void> sendMembers(List<Members> members) async {
-    final membersJson =
-        convertMembersToMembersDto(members).map((e) => e.toJson()).toList();
+  Future<void> sendMembers(List<NewMembers> members) async {
+    final membersJson = convertNewMembersToNewMembersDto(members)
+        .map((e) => e.toJson())
+        .toList();
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json; charset=UTF-8',

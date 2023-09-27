@@ -19,12 +19,6 @@ class ResetMembersDataPage extends StatefulWidget {
 }
 
 class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
-  // Future resetAllMembers() async {
-  //   final storage = new FlutterSecureStorage();
-  //   // Delete all
-  //   await storage.deleteAll();
-  // }
-
   final apiService = locator<ApiService>();
   final dbHandler = locator<LocalService>();
 

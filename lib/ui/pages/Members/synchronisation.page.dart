@@ -447,11 +447,11 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                         Navigator.of(context).pop();
                         LoadingIndicatorDialog().show(context);
                         print(_members.toString());
-                        await apiService.sendMembers(_members);
+                        await apiService.sendMembers(_newmembers);
                         //delete local data after transfering
-                        for (var members in _members) {
-                          dbHandler.deleteMembers(members.memberId);
-                        }
+                        // for (var members in _members) {
+                        //   dbHandler.deleteMembers(members.memberId);
+                        // }
                         getAllMembers().then((value) => setState(() {
                               _members = value;
                             }));
