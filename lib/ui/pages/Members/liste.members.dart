@@ -183,116 +183,112 @@ class _ListMembersPageState extends State<ListMembersPage> {
                           topRight: Radius.circular(10))),
                   child: ListView.separated(
                     separatorBuilder: (context, index) => const Divider(
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                     itemCount: _members.length,
                     itemBuilder: (context, index) {
                       final memberLine = index;
-                      return Card(
-                        elevation: 10,
-                        margin: const EdgeInsets.all(0.0),
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
+                      return ListTile(
+                        leading: const CircleAvatar(
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.white,
+                          ),
+                        ),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _members![index].memberFullName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Defaults.bluePrincipal,
+                              ),
                             ),
-                          ),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _members![index].memberFullName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Defaults.bluePrincipal,
-                                ),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _members![index].memberPhone,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Defaults.bluePrincipal,
                               ),
-                            ],
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _members![index].memberPhone,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Defaults.bluePrincipal,
-                                ),
-                              ),
-                            ],
-                          ),
-                          trailing: ElevatedButton(
-                            child: Text('Valider'),
-                            onPressed: !memberButtonStates[
-                                    _members[index].memberId]!
-                                ? null
-                                : () async {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) =>
-                                          AlertDialog(
-                                        title: Text('Alerte Présence'),
-                                        content: SizedBox(
-                                          height: 140,
-                                          child: Column(
-                                            children: [
-                                              Lottie.asset(
-                                                'animations/read.json',
-                                                repeat: true,
-                                                reverse: true,
-                                                fit: BoxFit.cover,
-                                                height: 100,
-                                              ),
-                                              const Text(
-                                                'Voulez-vous confirmer votre présence ?',
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
+                            ),
+                          ],
+                        ),
+                        trailing: ElevatedButton(
+                          child: Text('Valider'),
+                          onPressed:
+                              !memberButtonStates[_members[index].memberId]!
+                                  ? null
+                                  : () async {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) =>
+                                            AlertDialog(
+                                          title: Text('Alerte Présence'),
+                                          content: SizedBox(
+                                            height: 140,
+                                            child: Column(
+                                              children: [
+                                                Lottie.asset(
+                                                  'animations/read.json',
+                                                  repeat: true,
+                                                  reverse: true,
+                                                  fit: BoxFit.cover,
+                                                  height: 100,
+                                                ),
+                                                const Text(
+                                                  'Voulez-vous confirmer votre présence ?',
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
                                           ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, 'Non'),
+                                              child: Text('Non'),
+                                            ),
+                                            TextButton(
+                                              child: Text('Oui'),
+                                              onPressed: () async {
+                                                setState(() {
+                                                  memberButtonStates[
+                                                          _members[index]
+                                                              .memberId] =
+                                                      false; // Désactivez le bouton
+                                                });
+
+                                                // Mettez à jour le membre avec le nouveau drapeau
+                                                _members[index].flag =
+                                                    1; // Assurez-vous que '1' est le nouveau drapeau
+
+                                                try {
+                                                  // Appelez la méthode updateMembers pour mettre à jour le membre sur le serveur
+                                                  // await apiService.updateMembers(
+                                                  //     _members[index]);
+
+                                                  // Vous pouvez également mettre à jour le membre localement si nécessaire
+                                                  await dbHandler.updateMembers(
+                                                      _members[index]);
+
+                                                  Navigator.pop(context, 'Oui');
+                                                } catch (e) {
+                                                  // Gérez les erreurs en conséquence
+                                                  print(
+                                                      'Erreur lors de la mise à jour du membre : $e');
+                                                }
+                                              },
+                                            ),
+                                          ],
                                         ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, 'Non'),
-                                            child: Text('Non'),
-                                          ),
-                                          TextButton(
-                                            child: Text('Oui'),
-                                            onPressed: () async {
-                                              setState(() {
-                                                memberButtonStates[
-                                                        _members[index]
-                                                            .memberId] =
-                                                    false; // Désactivez le bouton
-                                              });
-
-                                              // Mettez à jour le membre avec le nouveau drapeau
-                                              _members[index].flag =
-                                                  1; // Assurez-vous que '1' est le nouveau drapeau
-
-                                              try {
-                                                // Appelez la méthode updateMembers pour mettre à jour le membre sur le serveur
-                                                // await apiService.updateMembers(
-                                                //     _members[index]);
-
-                                                // Vous pouvez également mettre à jour le membre localement si nécessaire
-                                                await dbHandler.updateMembers(
-                                                    _members[index]);
-
-                                                Navigator.pop(context, 'Oui');
-                                              } catch (e) {
-                                                // Gérez les erreurs en conséquence
-                                                print(
-                                                    'Erreur lors de la mise à jour du membre : $e');
-                                              }
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                          ),
+                                      );
+                                    },
                         ),
                       );
                     },
