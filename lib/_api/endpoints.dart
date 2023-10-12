@@ -14,5 +14,6 @@ class Endpoints {
 
   static const String sendNewMembers = 'api/Member/add';
 
-  static const String AddEnventGuest = '/api/EventGuest/AddEventGuestByMobile';
+  static const String sendNewMembersToEventGuest =
+      'api/EventGuest/AddEventGuestByMobile';
 }

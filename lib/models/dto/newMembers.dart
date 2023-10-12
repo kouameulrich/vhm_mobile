@@ -1,5 +1,4 @@
 class NewMembers {
-  int id = 0;
   final String memberLastName;
   final String memberFirstName;
   final String memberPhone;
@@ -10,7 +9,6 @@ class NewMembers {
   final int memberTypeId;
 
   NewMembers({
-    required this.id,
     required this.memberLastName,
     required this.memberFirstName,
     required this.memberPhone,
@@ -22,7 +20,6 @@ class NewMembers {
   });
 
   factory NewMembers.fromJson(Map<String, dynamic> json) => NewMembers(
-        id: json['id'],
         memberLastName: json['memberLastName'],
         memberFirstName: json['memberFirstName'],
         memberPhone: json['memberPhone'],
@@ -34,7 +31,6 @@ class NewMembers {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
         'memberLastName': memberLastName,
         'memberFirstName': memberFirstName,
         'memberPhone': memberPhone,

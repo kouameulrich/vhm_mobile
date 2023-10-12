@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
 import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
+import 'package:vhm_mobile/widgets/HomePage/VHM.HP.dart';
+import 'package:vhm_mobile/widgets/HomePage/leamanHP.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 import 'package:vhm_mobile/widgets/mydrawer.dart';
 
@@ -16,9 +18,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final storage = locator<TokenStorageService>();
   bool ligth = true;
-  late Future<User> userFuture;
 
   @override
   void initState() {
@@ -33,9 +33,9 @@ class _HomePageState extends State<HomePage> {
         padding: EdgeInsets.zero,
         children: [
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Defaults.appBarColor,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 bottomRight: Radius.circular(50),
               ),
             ),
@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   itemDashboard(
-                    'Face',
+                    'Leaman',
                     CupertinoIcons.person_2_alt,
                     Defaults.leamanPrincipal,
                     () {

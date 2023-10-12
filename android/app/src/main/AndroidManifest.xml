@@ -1,6 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"> 
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="vhm_mobile"
+        android:label="V H M"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

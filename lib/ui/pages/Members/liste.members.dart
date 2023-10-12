@@ -10,6 +10,7 @@ import 'package:vhm_mobile/ui/pages/Members/load.data.page.dart';
 import 'package:vhm_mobile/ui/pages/Members/newMembers.page.dart';
 import 'package:vhm_mobile/ui/pages/Members/reset.data.page.dart';
 import 'package:vhm_mobile/ui/pages/Members/synchronisation.page.dart';
+import 'package:vhm_mobile/ui/pages/home.page.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
 
 class ListMembersPage extends StatefulWidget {
@@ -35,6 +36,16 @@ class _ListMembersPageState extends State<ListMembersPage> {
     return await dbHandler.readAllMembers();
   }
 
+  // Fonction de clear de la bar de recherche
+  final bool _showClearIcon = false;
+
+  void _clearSearch() {
+    setState(() {
+      searchController.clear();
+      FocusScope.of(context).requestFocus(FocusNode());
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -43,10 +54,9 @@ class _ListMembersPageState extends State<ListMembersPage> {
 
       getAllMembers().then((value) => setState(() {
             _members = value;
-            // _contracts.sort();
             // Initialisez l'état de chaque membre à true (bouton activé)
             for (var member in _members) {
-              memberButtonStates[member.memberId] = true;
+              memberButtonStates[member.memberId] = member.flag == 0;
             }
           }));
     });
@@ -54,7 +64,6 @@ class _ListMembersPageState extends State<ListMembersPage> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     searchController.dispose();
     super.dispose();
   }
@@ -71,6 +80,21 @@ class _ListMembersPageState extends State<ListMembersPage> {
           ],
         ),
         centerTitle: true,
+        leading: Row(
+          children: [
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                },
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Defaults.bluePrincipal,
+                )),
+          ],
+        ),
         actions: [
           PopupMenuButton(itemBuilder: (context) {
             return const [
@@ -136,41 +160,67 @@ class _ListMembersPageState extends State<ListMembersPage> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.only(
-                  left: 20, right: 10, top: 15, bottom: 15),
-              child: TextFormField(
-                controller: searchController,
-                decoration: const InputDecoration(
-                  suffixIcon: Icon(Icons.search),
-                  hintText: 'Votre nom ou numéro de téléphone',
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    getAllMembers().then((memberss) => {
-                          _members = memberss
-                              .where((element) =>
-                                  element.memberFirstName!
-                                      .toLowerCase()
-                                      .contains(searchController.text
-                                          .toString()
-                                          .toLowerCase()) ||
-                                  element.memberLastName!
-                                      .toLowerCase()
-                                      .contains(searchController.text
-                                          .toString()
-                                          .toLowerCase()) ||
-                                  element.memberPhone!.toLowerCase().contains(
-                                      searchController.text
-                                          .toString()
-                                          .toLowerCase()))
-                              .toList(),
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Votre nom ou numéro de téléphone',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear),
+                                onPressed: _clearSearch,
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              const BorderSide(width: 3, color: Colors.black12),
+                          borderRadius: BorderRadius.circular(50.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              const BorderSide(width: 3, color: Colors.black12),
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          getAllMembers().then((memberss) {
+                            _members = memberss
+                                .where(
+                                    (element) =>
+                                        element.memberFullName!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberFirstName!.toLowerCase().contains(
+                                            searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberLastName!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberPhone!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()))
+                                .toList();
+                          });
                         });
-                  });
-                },
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-            // if (_searchText
-            //     .isNotEmpty) // Affiche les données uniquement si le champ de recherche n'est pas vide
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -182,9 +232,8 @@ class _ListMembersPageState extends State<ListMembersPage> {
                           topLeft: Radius.circular(10),
                           topRight: Radius.circular(10))),
                   child: ListView.separated(
-                    separatorBuilder: (context, index) => const Divider(
-                      color: Colors.black,
-                    ),
+                    separatorBuilder: (context, index) =>
+                        const Divider(color: Colors.black),
                     itemCount: _members.length,
                     itemBuilder: (context, index) {
                       final memberLine = index;
@@ -269,10 +318,6 @@ class _ListMembersPageState extends State<ListMembersPage> {
                                                     1; // Assurez-vous que '1' est le nouveau drapeau
 
                                                 try {
-                                                  // Appelez la méthode updateMembers pour mettre à jour le membre sur le serveur
-                                                  // await apiService.updateMembers(
-                                                  //     _members[index]);
-
                                                   // Vous pouvez également mettre à jour le membre localement si nécessaire
                                                   await dbHandler.updateMembers(
                                                       _members[index]);

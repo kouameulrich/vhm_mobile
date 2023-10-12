@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_const_constructors, use_build_context_synchronously, unused_field
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vhm_mobile/_api/apiService.dart';
 import 'package:vhm_mobile/_api/tokenStorageService.dart';
@@ -24,7 +26,9 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   final dbHandler = locator<LocalService>();
   final apiService = locator<ApiService>();
   final storage = locator<TokenStorageService>();
-
+  bool hasInternet = false;
+  bool isLoadingVisitor = false;
+  bool isLoadingPresence = false;
   List<Members> _members = [];
   List<Members> _membersPoint = [];
 
@@ -50,10 +54,8 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
             setState(() {
               _members = value;
               // Filtrer les membres dont le flag est passé de 0 à 1
-              _membersPoint = value
-                  // ignore: unrelated_type_equality_checks
-                  .where((member) => member.flag == 1)
-                  .toList();
+              _membersPoint =
+                  value.where((member) => member.flag == 1).toList();
               _countMembers = _membersPoint.length;
             })
           });
@@ -82,94 +84,8 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
             SizedBox(
               height: 30,
             ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15),
-                child: Card(
-                  color: Colors.white,
-                  elevation: 70,
-                  child: SizedBox(
-                    width: 270,
-                    height: 270,
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          const Text(
-                            "Membre",
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              // color: Defaults.appBarColor,
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Nombre:',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Defaults.bluePrincipal),
-                                ),
-                                SizedBox(
-                                  height: 10,
-                                ),
-                                Text(
-                                  '$_countMembers',
-                                  style: TextStyle(
-                                      fontSize: 35,
-                                      fontWeight: FontWeight.bold,
-                                      color: Defaults.bluePrincipal),
-                                ),
-                                Text(
-                                  'Membre Présent',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      color: Defaults.bluePrincipal),
-                                )
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 13,
-                          ),
-                          SizedBox(
-                            width: 250,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                _transferMembersToServer();
-                              },
-                              style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.all(
-                                      Defaults.bottomColor)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Icon(Icons.send),
-                                    Text(
-                                      'Transferer',
-                                      style: TextStyle(fontSize: 20),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+
+            ///-------------NEW MEMBER-----------///
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 15),
@@ -259,6 +175,96 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                 ),
               ),
             ),
+
+            ///-------------MEMBER-----------///
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15),
+                child: Card(
+                  color: Colors.white,
+                  elevation: 70,
+                  child: SizedBox(
+                    width: 270,
+                    height: 270,
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Membre",
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(
+                            height: 20,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              // color: Defaults.appBarColor,
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Nombre:',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Defaults.bluePrincipal),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  '$_countMembers',
+                                  style: TextStyle(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Defaults.bluePrincipal),
+                                ),
+                                Text(
+                                  'Membre Présent',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      color: Defaults.bluePrincipal),
+                                )
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 13,
+                          ),
+                          SizedBox(
+                            width: 250,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                _transferMembersToServer();
+                              },
+                              style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.all(
+                                      Defaults.bottomColor)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.send),
+                                    Text(
+                                      'Transferer',
+                                      style: TextStyle(fontSize: 20),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -266,16 +272,16 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   }
 
   _transferNewMembersToServer() async {
-    if (_newmembers.isNotEmpty) {
-      final connectivityResult = await Connectivity().checkConnectivity();
-
-      if (connectivityResult == ConnectivityResult.none) {
-        // Pas de connexion Internet
-        showDialog(
+    try {
+      hasInternet = await InternetConnectionChecker().hasConnection;
+      if (hasInternet == false) {
+        // ignore: use_build_context_synchronously
+        // Vérifiez votre connexion Internet et réessayez.
+        return showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Text('Pas de connexion Internet',
+              title: const Text('ERROR',
                   style: TextStyle(color: Defaults.blueAppBar)),
               content: SizedBox(
                 height: 140,
@@ -307,129 +313,48 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
           },
         );
       } else {
-        // Connexion Internet disponible
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Confirmation',
-                  style: TextStyle(color: Defaults.blueAppBar)),
-              content: SizedBox(
-                height: 160,
-                child: Column(
-                  children: [
-                    Lottie.asset(
-                      'animations/sendData.json',
-                      repeat: true,
-                      reverse: true,
-                      fit: BoxFit.cover,
-                      height: 100,
-                    ),
-                    const Text(
-                      'Voulez-vous transférer les nouveaux membres vers le serveur?',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Non'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    try {
-                      Navigator.of(context).pop();
-                      LoadingIndicatorDialog().show(context);
-                      print(_newmembers.toString());
-                      await apiService.sendNewMembers(_newmembers);
-                      // Supprimer les données locales après le transfert
-                      for (var newmembers in _newmembers) {
-                        dbHandler.deleteNewMembers(newmembers.id);
-                      }
-                      getAllNewMembers().then((value) => setState(() {
-                            _newmembers = value;
-                          }));
-                      LoadingIndicatorDialog().dismiss();
-                    } on DioError catch (e) {
-                      LoadingIndicatorDialog().dismiss();
-                      ErrorDialog().show(e);
-                      //print(e.message);
-                    }
-                  },
-                  child: const Text('Oui'),
-                )
-              ],
-            );
-          },
-        );
-      }
-    }
-  }
+        // Affichez l'indicateur de chargement au début de la fonction
+        LoadingIndicatorDialog().show(context);
+        setState(() {
+          isLoadingVisitor = true;
+        });
 
-  _transferMembersToServer() async {
-    if (_members.isNotEmpty) {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        // Pas de connexion Internet
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Pas de connexion Internet',
-                  style: TextStyle(color: Defaults.blueAppBar)),
-              content: SizedBox(
-                height: 140,
-                child: Column(
-                  children: [
-                    Lottie.asset(
-                      'animations/nodata.json',
-                      repeat: true,
-                      reverse: true,
-                      fit: BoxFit.cover,
-                      height: 100,
-                    ),
-                    const Text(
-                      'Vérifiez votre connexion Internet et réessayez.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+        //APPEL DE L'API D'ENVOI
+        var sendResponse = await apiService.sendNewMembers(_newmembers);
+
+        // Fermez l'indicateur de chargement après avoir obtenu une réponse
+        LoadingIndicatorDialog().dismiss();
+
+        if (kDebugMode) {
+          print(sendResponse);
+        }
+
+        if (sendResponse == 'success') {
+          setState(() {
+            isLoadingVisitor = false;
+          });
+          // ignore: use_build_context_synchronously
+          // Nouveau membre validé avec succès
+          return showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text(
+                'SUCCESS',
+                textAlign: TextAlign.center,
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Confirmation',
-                  style: TextStyle(color: Defaults.blueAppBar)),
               content: SizedBox(
                 height: 140,
                 child: Column(
                   children: [
                     Lottie.asset(
-                      'animations/sendData.json',
+                      'animations/success.json',
                       repeat: true,
                       reverse: true,
                       fit: BoxFit.cover,
                       height: 100,
                     ),
                     const Text(
-                      'Voulez-vous transferer les membres vers le serveur?',
+                      'Nouveau membre validé avec succès',
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -440,34 +365,319 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: const Text('Non')),
-                TextButton(
-                    onPressed: () async {
-                      try {
-                        Navigator.of(context).pop();
-                        LoadingIndicatorDialog().show(context);
-                        print(_members.toString());
-                        await apiService.sendMembers(_newmembers);
-                        //delete local data after transfering
-                        // for (var members in _members) {
-                        //   dbHandler.deleteMembers(members.memberId);
-                        // }
-                        getAllMembers().then((value) => setState(() {
-                              _members = value;
-                            }));
-                        LoadingIndicatorDialog().dismiss();
-                      } on DioError catch (e) {
-                        LoadingIndicatorDialog().dismiss();
-                        ErrorDialog().show(e);
-                        //print(e.message);
-                      }
+                    child: const Text('RETOUR'))
+              ],
+            ),
+          );
+        } else if (sendResponse == 'error') {
+          setState(() {
+            isLoadingVisitor = false;
+          });
+          // ignore: use_build_context_synchronously
+          // Aucun visiteur enregistré .
+          return showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('ERROR',
+                    style: TextStyle(color: Defaults.blueAppBar)),
+                content: SizedBox(
+                  height: 140,
+                  child: Column(
+                    children: [
+                      Lottie.asset(
+                        'animations/nodata.json',
+                        repeat: true,
+                        reverse: true,
+                        fit: BoxFit.cover,
+                        height: 100,
+                      ),
+                      const Text(
+                        'Aucun visiteur enregistré .',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
                     },
-                    child: const Text('Oui'))
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          setState(() {
+            isLoadingVisitor = false;
+          });
+          // ignore: use_build_context_synchronously
+          // Une erreur est survenue .
+          return showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('ERROR',
+                    style: TextStyle(color: Defaults.blueAppBar)),
+                content: SizedBox(
+                  height: 140,
+                  child: Column(
+                    children: [
+                      Lottie.asset(
+                        'animations/nodata.json',
+                        repeat: true,
+                        reverse: true,
+                        fit: BoxFit.cover,
+                        height: 100,
+                      ),
+                      const Text(
+                        'Une erreur est survenue .',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    } catch (e) {
+      // En cas d'erreur inattendue, affichez un message d'erreur
+      print('Erreur lors de l\'envoi des nouveaux membres : $e');
+      setState(() {
+        isLoadingPresence = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('ERROR',
+                style: TextStyle(color: Defaults.blueAppBar)),
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'animations/nodata.json',
+                    repeat: true,
+                    reverse: true,
+                    fit: BoxFit.cover,
+                    height: 100,
+                  ),
+                  const Text(
+                    'Une erreur est survenue lors de l\'envoi des nouveaux membres.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  _transferMembersToServer() async {
+    try {
+      hasInternet = await InternetConnectionChecker().hasConnection;
+      if (!hasInternet) {
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('ERROR',
+                  style: TextStyle(color: Defaults.blueAppBar)),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/nodata.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Vérifiez votre connexion Internet et réessayez.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
               ],
             );
           },
         );
+        return;
+      } else {
+        // Affichez l'indicateur de chargement au début de la fonction
+        LoadingIndicatorDialog().show(context);
+        setState(() {
+          isLoadingVisitor = true;
+        });
+
+        // APPEL DE L'API D'ENVOI
+        var sendResponse = await apiService.sendMembers(_membersPoint);
+
+        // Fermez l'indicateur de chargement après avoir obtenu une réponse
+        LoadingIndicatorDialog().dismiss();
+
+        if (sendResponse == 'success') {
+          setState(() {
+            isLoadingPresence = true;
+          });
+
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text(
+                'SUCCESS',
+                textAlign: TextAlign.center,
+              ),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/success.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 100,
+                    ),
+                    const Text(
+                      'Membre validé avec succès',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('RETOUR'))
+              ],
+            ),
+          );
+        } else {
+          setState(() {
+            isLoadingPresence = false;
+          });
+
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('ERROR',
+                    style: TextStyle(color: Defaults.blueAppBar)),
+                content: SizedBox(
+                  height: 140,
+                  child: Column(
+                    children: [
+                      Lottie.asset(
+                        'animations/nodata.json',
+                        repeat: true,
+                        reverse: true,
+                        fit: BoxFit.cover,
+                        height: 100,
+                      ),
+                      const Text(
+                        'Une erreur est survenue .',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
+    } catch (e) {
+      // En cas d'erreur inattendue, affichez un message d'erreur
+      print('Erreur lors de l\'envoi des membres : $e');
+      setState(() {
+        isLoadingPresence = false;
+      });
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('ERROR',
+                style: TextStyle(color: Defaults.blueAppBar)),
+            content: SizedBox(
+              height: 140,
+              child: Column(
+                children: [
+                  Lottie.asset(
+                    'animations/nodata.json',
+                    repeat: true,
+                    reverse: true,
+                    fit: BoxFit.cover,
+                    height: 100,
+                  ),
+                  const Text(
+                    'Une erreur est survenue lors de l\'envoi des membres.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      Future.delayed(Duration(seconds: 5), () {
+        LoadingIndicatorDialog().dismiss();
+      });
     }
   }
 }

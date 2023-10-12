@@ -22,5 +22,4 @@ Future<void> setup() async {
   locator.registerSingleton(DatabaseConnection());
   locator.registerSingleton(Repository(locator<DatabaseConnection>()));
   locator.registerSingleton(LocalService(locator<Repository>()));
-  //locator.registerSingleton(PrinterService());
 }

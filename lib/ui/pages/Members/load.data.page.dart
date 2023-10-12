@@ -163,6 +163,7 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
   }
 
   loadData1() async {
+    LoadingIndicatorDialog().show(context);
     var headersList = {'Content-Type': 'application/json'};
     var url = Uri.parse(
         'https://backendvhm.azurewebsites.net/api/Member/getAll?churchId=1');
@@ -173,7 +174,6 @@ class _LoadMembersDataPageState extends State<LoadMembersDataPage> {
     var res = await req.send();
     final resBody = await res.stream.bytesToString();
 
-    LoadingIndicatorDialog().show(context);
     if (res.statusCode >= 200 && res.statusCode < 300) {
       print(resBody);
       List<Members> memberss = await apiService.getAllMembers();

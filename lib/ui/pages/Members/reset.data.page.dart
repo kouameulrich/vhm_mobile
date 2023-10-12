@@ -19,6 +19,12 @@ class ResetMembersDataPage extends StatefulWidget {
 }
 
 class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
+  // Future resetAllMembers() async {
+  //   final storage = new FlutterSecureStorage();
+  //   // Delete all
+  //   await storage.deleteAll();
+  // }
+
   final apiService = locator<ApiService>();
   final dbHandler = locator<LocalService>();
 
@@ -35,7 +41,7 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(
+            const SizedBox(
               height: 100,
             ),
             Center(
@@ -48,11 +54,12 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
                     width: 310,
                     height: 310,
                     child: Padding(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
                           const Text(
                             "Réinitialisation des données",
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                                 fontSize: 20, fontWeight: FontWeight.bold),
                           ),
@@ -60,7 +67,7 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
                             height: 5,
                           ),
                           SizedBox(
-                            height: 160,
+                            height: 155,
                             child: Column(
                               children: [
                                 Lottie.asset(
@@ -81,16 +88,16 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
                             height: 50,
                             child: ElevatedButton(
                               onPressed: () {
-                                _submitLogin();
+                                _resetData();
                               },
                               style: ButtonStyle(
                                   backgroundColor: MaterialStateProperty.all(
                                       Defaults.bottomColor)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Icon(
                                       Icons.send,
                                       size: 25,
@@ -120,7 +127,7 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
     );
   }
 
-  Future<void> _submitLogin() async {
+  Future<void> _resetData() async {
     LoadingIndicatorDialog().show(context);
 
     try {
@@ -140,7 +147,7 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
             textAlign: TextAlign.center,
           ),
           content: SizedBox(
-            height: 120,
+            height: 140,
             child: Column(
               children: [
                 Lottie.asset(

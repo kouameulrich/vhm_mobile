@@ -57,6 +57,22 @@ class _NewMembersPageState extends State<NewMembersPage> {
             Text('NOUVELLE PERSONNE'),
           ],
         ),
+        leading: Row(
+          children: [
+            IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ListMembersPage()),
+                  );
+                },
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Defaults.bluePrincipal,
+                )),
+          ],
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(color: Defaults.blueFondCadre),
@@ -116,8 +132,29 @@ class _NewMembersPageState extends State<NewMembersPage> {
 
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: ZoneSaisie(
-                                  context, memberInvitedByController),
+                              child: TextFormField(
+                                controller: memberInvitedByController,
+                                autocorrect: false,
+                                decoration: InputDecoration(
+                                  hintText: "Remplissez le champ",
+                                  filled: true,
+                                  fillColor: Defaults.white,
+                                  border: InputBorder.none,
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                        width: 1,
+                                        color: Defaults.white), //<-- SEE HERE
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(
+                                        width: 1, color: Defaults.white),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                              // child: ZoneSaisie(
+                              //     context, memberInvitedByController),
                             ),
                             const SizedBox(
                               height: 8,
@@ -222,7 +259,7 @@ class _NewMembersPageState extends State<NewMembersPage> {
 
   onSave() async {
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-    int dernierIdMembre = await dbHandler.getDernierIdMembre();
+    // int dernierIdMembre = await dbHandler.getDernierIdMembre();
 
     // Vérifiez si le membre existe déjà en fonction de certains critères, par exemple, le numéro de téléphone
     bool memberExists =
@@ -305,9 +342,8 @@ class _NewMembersPageState extends State<NewMembersPage> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    int nouvelIdMembre = dernierIdMembre + 1;
+                    // int nouvelIdMembre = dernierIdMembre + 1;
                     newMembers = NewMembers(
-                      id: nouvelIdMembre,
                       memberLastName: membersLastNameController.text,
                       memberFirstName: membersFistNameController.text,
                       memberPhone: memberPhoneController.text,

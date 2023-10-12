@@ -12,6 +12,11 @@ class LocalService {
     return await _repository.insertData('members', members.toJson());
   }
 
+  //SAVE MEMBERS
+  Future<int> SaveNewMembersInMemberTable(Members members) async {
+    return await _repository.insertData('members', members.toJson());
+  }
+
 //READ ALL MEMEBERS
   Future<List<Members>> readAllMembers() async {
     List<Members> memberss = [];
@@ -30,26 +35,6 @@ class LocalService {
   // delete Members
   deleteMembers(membersId) async {
     return await _repository.deleteData('members', membersId);
-  }
-
-  //LAST MEMBERS
-  Future<int> getDernierIdMembre() async {
-    try {
-      final List<Map<String, dynamic>> list =
-          await _repository.readData('members');
-
-      if (list.isNotEmpty) {
-        // Tri des membres par ID dans l'ordre décroissant pour obtenir le dernier ID.
-        list.sort((a, b) => b['id'].compareTo(a['id']));
-        return list.first['id'] as int;
-      } else {
-        return 0; // Aucun membre trouvé, retourne 0 par défaut
-      }
-    } catch (e) {
-      // Gérer les erreurs, par exemple, la base de données n'existe pas encore.
-      print('Erreur lors de la récupération du dernier ID de membre: $e');
-      return 0; // En cas d'erreur, retournez 0
-    }
   }
 
 //SAVE LEAMAN

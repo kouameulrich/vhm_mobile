@@ -2,14 +2,19 @@
 
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:vhm_mobile/_api/dioClient.dart';
 import 'package:vhm_mobile/_api/endpoints.dart';
+import 'package:vhm_mobile/db/local.servie.dart';
+import 'package:vhm_mobile/di/service_locator.dart';
 import 'package:vhm_mobile/models/dto/members.dart';
 import 'package:vhm_mobile/models/dto/membersDto.dart';
 import 'package:vhm_mobile/models/dto/newMembers.dart';
 import 'package:vhm_mobile/models/dto/newMembersDto.dart';
 import 'package:vhm_mobile/models/dto/user.dart';
+import 'package:http/http.dart' as http;
+
+final dbHandler = locator<LocalService>();
 
 class ApiService {
   final DioClient _dioClient;
@@ -30,95 +35,112 @@ class ApiService {
     return member;
   }
 
-  Future<List<NewMembers>> storeEventGuest() async {
-    final response = await _dioClient.post(Endpoints.AddEnventGuest);
-    List<NewMembers> newmembers =
-        (response.data as List).map((e) => NewMembers.fromJson(e)).toList();
-    return newmembers;
-  }
-
-  Future<void> sendMembers(List<NewMembers> members) async {
-    final membersJson = convertNewMembersToNewMembersDto(members)
-        .map((e) => e.toJson())
-        .toList();
-
-    final Map<String, String> headers = {
-      'Content-Type': 'application/json; charset=UTF-8',
-    };
-
-    final response = await _dioClient.post(
-      Endpoints.sendMembers,
-      data: json.encode(membersJson),
-      options: Options(headers: headers),
-    );
-
-    if (response.statusCode == 200) {
-      final sendResponse = response.data;
-      if (sendResponse != "") {
-        // Add EventGuest
-        final Map<String, String> headers = {
+  Future sendNewMembers(List<NewMembers> newmembers) async {
+    String sendResponse;
+    String responseAlert;
+    for (int i = 0; i <= newmembers.length - 1; i++) {
+      var url =
+          Uri.parse('https://backendvhm.azurewebsites.net/api/Member/add');
+      final response = await http.post(
+        url,
+        headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
-        };
+        },
+        body: jsonEncode({
+          "memberLastName": newmembers[i].memberLastName,
+          "memberFirstName": newmembers[i].memberFirstName,
+          "memberPhone": newmembers[i].memberPhone,
+          "memberDateOfEntry": newmembers[i].memberDateOfEntry,
+          "memberInvitedBy": newmembers[i].memberInvitedBy,
+          "memberGender": newmembers[i].memberGender,
+          "churchId": newmembers[i].churchId,
+          "memberTypeId": newmembers[i].memberTypeId
+        }),
+      );
 
-        final response = await _dioClient.post(
-          Endpoints.sendNewMembers,
-          data: json.encode({
-            "eventGuestJoinDate": null,
-            "eventGuestJoinDay": null,
-            "eventGuestJoinMonth": null,
-            "eventGuestJoinYear": null,
-            "eventId": null,
-            "memberId": sendResponse,
-            "churchId":
-                1, // Vous pouvez spécifier la valeur appropriée pour churchId ici
-          }),
-          options: Options(headers: headers),
-        );
+      if (response.statusCode == 200) {
+        sendResponse = response.body;
+        if (sendResponse != "") {
+          // Add EventGuest
+          var url = Uri.parse(
+              'https://backendvhm.azurewebsites.net/api/EventGuest/AddEventGuestByMobile');
+          final responseEventGuest = await http.post(
+            url,
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode({
+              "eventGuestJoinDate": null,
+              "eventGuestJoinDay": null,
+              "eventGuestJoinMonth": null,
+              "eventGuestJoinYear": null,
+              "eventId": null,
+              "memberId": sendResponse,
+              "churchId": newmembers[i].churchId
+            }),
+          );
+
+          Members newMemb = Members(
+            memberId: int.parse(sendResponse),
+            memberLastName: newmembers[i].memberLastName,
+            memberFirstName: newmembers[i].memberFirstName,
+            memberFullName:
+                "${newmembers[i].memberFirstName}' '${newmembers[i].memberFirstName}",
+            memberPhone: newmembers[i].memberPhone,
+            memberStatus: '',
+            flag: true,
+          );
+          // storage memberId in local
+          dbHandler.SaveMembers(newMemb);
+        }
+      } else {
+        responseAlert = 'error';
+        return responseAlert;
       }
     }
+
+    responseAlert = 'success';
+    return responseAlert;
   }
 
-  List<Membersdto> convertMembersToMembersDto(List<Members> members) {
-    List<Membersdto> membersDto = [];
-    for (var m in members) {
-      Membersdto m1 = Membersdto(
-        memberId: m.memberId,
-        memberLastName: m.memberLastName,
-        memberFirstName: m.memberFirstName,
-        memberFullName: m.memberFullName,
-        memberPhone: m.memberPhone,
-        memberStatus: m.memberStatus,
-        flag: m.flag == 0 ? false : true,
+  Future sendMembers(List<Members> members) async {
+    if (kDebugMode) {
+      print(members[0].memberId);
+    }
+
+    for (int i = 0; i <= members.length - 1; i++) {
+      var eventMemberJoinDate = DateTime.now().toString();
+      var churchId = 1;
+
+      var url = Uri.parse(
+          'https://backendvhm.azurewebsites.net/api/EventMember/mobileAdd');
+
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          "eventMemberJoinDate": null,
+          "eventMemberJoinDay": null,
+          "eventMemberJoinMonth": null,
+          "eventMemberJoinYear": null,
+          "eventId": null,
+          "memberId": members[i].memberId,
+          "churchId": churchId
+        }),
       );
-      membersDto.add(m1);
-    }
-    return membersDto;
-  }
 
-  Future<void> sendNewMembers(List<NewMembers> newmembers) async {
-    final newmembersJson = convertNewMembersToNewMembersDto(newmembers)
-        .map((e) => e.toJson())
-        .toList();
-    print(json.encode(newmembersJson));
-    await _dioClient.post(Endpoints.sendNewMembers,
-        data: json.encode(newmembersJson));
-  }
+      if (kDebugMode) {
+        print(response.statusCode);
+      }
 
-  List<NewMembersdto> convertNewMembersToNewMembersDto(
-      List<NewMembers> newmembers) {
-    List<NewMembersdto> newmembersDto = [];
-    for (var nm in newmembers) {
-      NewMembersdto nm1 = NewMembersdto(
-          memberLastName: nm.memberLastName,
-          memberFirstName: nm.memberFirstName,
-          memberPhone: nm.memberPhone,
-          memberDateOfEntry: nm.memberDateOfEntry,
-          memberInvitedBy: nm.memberInvitedBy,
-          memberGender: nm.memberGender,
-          churchId: nm.churchId,
-          memberTypeId: nm.memberTypeId);
-      newmembersDto.add(nm1);
+      if (response.statusCode != 200) {
+        // Lancez une exception pour signaler une erreur
+        throw Exception(
+            'Erreur lors de l\'envoi du membre ${members[i].memberId}');
+      }
     }
-    return newmembersDto;
+    return 'success';
   }
 }
