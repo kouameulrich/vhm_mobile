@@ -36,7 +36,6 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
         title: const Text('Réinitialisation'),
         centerTitle: true,
       ),
-      // drawer: MyDrawer(),
       backgroundColor: Defaults.backgroundColorPage,
       body: SingleChildScrollView(
         child: Column(
@@ -134,7 +133,7 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
       List<Members> _members = await apiService.getAllMembers();
 
       for (var members in _members) {
-        await dbHandler.deleteMembers(members);
+        await dbHandler.deleteAllMembers();
       }
 
       LoadingIndicatorDialog().dismiss();

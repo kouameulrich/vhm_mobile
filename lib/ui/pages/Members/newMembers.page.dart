@@ -57,22 +57,6 @@ class _NewMembersPageState extends State<NewMembersPage> {
             Text('NOUVELLE PERSONNE'),
           ],
         ),
-        leading: Row(
-          children: [
-            IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ListMembersPage()),
-                  );
-                },
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Defaults.bluePrincipal,
-                )),
-          ],
-        ),
       ),
       body: Container(
         decoration: const BoxDecoration(color: Defaults.blueFondCadre),

@@ -38,34 +38,42 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   int _countNewMembers = 0;
 
   Future<List<Members>> getAllMembers() async {
-    return await dbHandler.readAllMembers();
+    List<Members> members = await dbHandler.readAllMembers();
+    // Filtrer les membres dont le flag est passé de 0 à 1
+    _membersPoint = members.where((member) => member.flag == 1).toList();
+    _countMembers = _membersPoint.length;
+    return members;
   }
 
   Future<List<NewMembers>> getAllNewMembers() async {
-    return await dbHandler.readAllNewMembers();
+    List<NewMembers> newMembers = await dbHandler.readAllNewMembers();
+    _countNewMembers = newMembers.length;
+    return newMembers;
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      getAllMembers();
+      getAllNewMembers();
       // do something
-      getAllMembers().then((value) => {
-            setState(() {
-              _members = value;
-              // Filtrer les membres dont le flag est passé de 0 à 1
-              _membersPoint =
-                  value.where((member) => member.flag == 1).toList();
-              _countMembers = _membersPoint.length;
-            })
-          });
+      //   getAllMembers().then((value) => {
+      //         setState(() {
+      //           _members = value;
+      //           // Filtrer les membres dont le flag est passé de 0 à 1
+      //           _membersPoint =
+      //               value.where((member) => member.flag == 1).toList();
+      //           _countMembers = _membersPoint.length;
+      //         })
+      //       });
 
-      getAllNewMembers().then((value) => {
-            setState(() {
-              _newmembers = value;
-              _countNewMembers = value.length;
-            })
-          });
+      //   getAllNewMembers().then((value) => {
+      //         setState(() {
+      //           _newmembers = value;
+      //           _countNewMembers = value.length;
+      //         })
+      //       });
     });
   }
 
@@ -330,9 +338,15 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
         }
 
         if (sendResponse == 'success') {
-          setState(() {
-            isLoadingVisitor = false;
-          });
+          getAllMembers().then((value) => {
+                setState(() {
+                  _members = value;
+                  // Filtrer les membres dont le flag est passé de 0 à 1
+                  _membersPoint =
+                      value.where((member) => member.flag == 1).toList();
+                  _countMembers = _membersPoint.length;
+                })
+              });
           // ignore: use_build_context_synchronously
           // Nouveau membre validé avec succès
           return showDialog(
@@ -675,8 +689,9 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
         },
       );
 
-      Future.delayed(Duration(seconds: 5), () {
-        LoadingIndicatorDialog().dismiss();
+      Future.delayed(const Duration(seconds: 5), () {
+        print('One second has passed.');
+        LoadingIndicatorDialog().dismiss(); // Prints after 1 second.
       });
     }
   }

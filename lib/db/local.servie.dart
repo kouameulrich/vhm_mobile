@@ -37,6 +37,17 @@ class LocalService {
     return await _repository.deleteData('members', membersId);
   }
 
+  deleteAllMembers() async {
+    try {
+      final int result = await _repository.deleteData('members',
+          {}); // Supprime tous les enregistrements de la table 'members'
+      print(
+          'Tous les membres ont été supprimés de la base de données. Résultat : $result');
+    } catch (e) {
+      print('Erreur lors de la suppression de tous les membres : $e');
+    }
+  }
+
 //SAVE LEAMAN
 
 //READ ALL LEAMAN

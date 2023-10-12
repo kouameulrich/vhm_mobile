@@ -12,6 +12,7 @@ import 'package:vhm_mobile/ui/pages/Members/reset.data.page.dart';
 import 'package:vhm_mobile/ui/pages/Members/synchronisation.page.dart';
 import 'package:vhm_mobile/ui/pages/home.page.dart';
 import 'package:vhm_mobile/widgets/default.colors.dart';
+import 'package:vhm_mobile/widgets/loading.indicator.dart';
 
 class ListMembersPage extends StatefulWidget {
   const ListMembersPage({super.key});
@@ -46,19 +47,29 @@ class _ListMembersPageState extends State<ListMembersPage> {
     });
   }
 
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print('------- DATA -------');
 
-      getAllMembers().then((value) => setState(() {
-            _members = value;
-            // Initialisez l'état de chaque membre à true (bouton activé)
-            for (var member in _members) {
-              memberButtonStates[member.memberId] = member.flag == 0;
-            }
-          }));
+      // Utilisation du LoadingIndicatorDialog
+      LoadingIndicatorDialog().show(context, text: 'Chargement en cours');
+
+      getAllMembers().then((value) {
+        setState(() {
+          _members = value;
+          // Initialisez l'état de chaque membre à true (bouton activé)
+          for (var member in _members) {
+            memberButtonStates[member.memberId] = member.flag == 0;
+          }
+          isLoading = false; // Fin du chargement
+          // Dissimulez le LoadingIndicatorDialog une fois que les données sont chargées
+          LoadingIndicatorDialog().dismiss();
+        });
+      });
     });
   }
 
@@ -80,21 +91,6 @@ class _ListMembersPageState extends State<ListMembersPage> {
           ],
         ),
         centerTitle: true,
-        leading: Row(
-          children: [
-            IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                },
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Defaults.bluePrincipal,
-                )),
-          ],
-        ),
         actions: [
           PopupMenuButton(itemBuilder: (context) {
             return const [
@@ -188,31 +184,33 @@ class _ListMembersPageState extends State<ListMembersPage> {
                         ),
                       ),
                       onChanged: (value) {
-                        setState(() {
-                          getAllMembers().then((memberss) {
-                            _members = memberss
-                                .where(
-                                    (element) =>
-                                        element.memberFullName!
-                                            .toLowerCase()
-                                            .contains(searchController.text
-                                                .toString()
-                                                .toLowerCase()) ||
-                                        element.memberFirstName!.toLowerCase().contains(
-                                            searchController.text
-                                                .toString()
-                                                .toLowerCase()) ||
-                                        element.memberLastName!
-                                            .toLowerCase()
-                                            .contains(searchController.text
-                                                .toString()
-                                                .toLowerCase()) ||
-                                        element.memberPhone!
-                                            .toLowerCase()
-                                            .contains(searchController.text
-                                                .toString()
-                                                .toLowerCase()))
-                                .toList();
+                        searchController.addListener(() {
+                          setState(() {
+                            getAllMembers().then((memberss) {
+                              _members = memberss
+                                  .where(
+                                      (element) =>
+                                          element.memberFullName!
+                                              .toLowerCase()
+                                              .contains(searchController.text
+                                                  .toString()
+                                                  .toLowerCase()) ||
+                                          element.memberFirstName!.toLowerCase().contains(
+                                              searchController.text
+                                                  .toString()
+                                                  .toLowerCase()) ||
+                                          element.memberLastName!
+                                              .toLowerCase()
+                                              .contains(searchController.text
+                                                  .toString()
+                                                  .toLowerCase()) ||
+                                          element.memberPhone!
+                                              .toLowerCase()
+                                              .contains(searchController.text
+                                                  .toString()
+                                                  .toLowerCase()))
+                                  .toList();
+                            });
                           });
                         });
                       },
@@ -231,12 +229,9 @@ class _ListMembersPageState extends State<ListMembersPage> {
                           bottomRight: Radius.circular(10),
                           topLeft: Radius.circular(10),
                           topRight: Radius.circular(10))),
-                  child: ListView.separated(
-                    separatorBuilder: (context, index) =>
-                        const Divider(color: Colors.black),
+                  child: ListView.builder(
                     itemCount: _members.length,
                     itemBuilder: (context, index) {
-                      final memberLine = index;
                       return ListTile(
                         leading: const CircleAvatar(
                           child: Icon(
@@ -306,23 +301,26 @@ class _ListMembersPageState extends State<ListMembersPage> {
                                             TextButton(
                                               child: Text('Oui'),
                                               onPressed: () async {
+                                                // Fermez le contexte
+                                                Navigator.pop(context, 'Oui');
+                                                print('Context fermé');
+
                                                 setState(() {
                                                   memberButtonStates[
                                                           _members[index]
                                                               .memberId] =
                                                       false; // Désactivez le bouton
                                                 });
+                                                print('bouton grisé');
 
                                                 // Mettez à jour le membre avec le nouveau drapeau
                                                 _members[index].flag =
                                                     1; // Assurez-vous que '1' est le nouveau drapeau
-
                                                 try {
                                                   // Vous pouvez également mettre à jour le membre localement si nécessaire
                                                   await dbHandler.updateMembers(
                                                       _members[index]);
-
-                                                  Navigator.pop(context, 'Oui');
+                                                  print('Membres mise à jour');
                                                 } catch (e) {
                                                   // Gérez les erreurs en conséquence
                                                   print(
