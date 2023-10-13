@@ -38,42 +38,34 @@ class _SynchroMembersDataPageState extends State<SynchroMembersDataPage> {
   int _countNewMembers = 0;
 
   Future<List<Members>> getAllMembers() async {
-    List<Members> members = await dbHandler.readAllMembers();
-    // Filtrer les membres dont le flag est passé de 0 à 1
-    _membersPoint = members.where((member) => member.flag == 1).toList();
-    _countMembers = _membersPoint.length;
-    return members;
+    return await dbHandler.readAllMembers();
   }
 
   Future<List<NewMembers>> getAllNewMembers() async {
-    List<NewMembers> newMembers = await dbHandler.readAllNewMembers();
-    _countNewMembers = newMembers.length;
-    return newMembers;
+    return await dbHandler.readAllNewMembers();
   }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      getAllMembers();
-      getAllNewMembers();
       // do something
-      //   getAllMembers().then((value) => {
-      //         setState(() {
-      //           _members = value;
-      //           // Filtrer les membres dont le flag est passé de 0 à 1
-      //           _membersPoint =
-      //               value.where((member) => member.flag == 1).toList();
-      //           _countMembers = _membersPoint.length;
-      //         })
-      //       });
+      getAllMembers().then((value) => {
+            setState(() {
+              _members = value;
+              // Filtrer les membres dont le flag est passé de 0 à 1
+              _membersPoint =
+                  value.where((member) => member.flag == 1).toList();
+              _countMembers = _membersPoint.length;
+            })
+          });
 
-      //   getAllNewMembers().then((value) => {
-      //         setState(() {
-      //           _newmembers = value;
-      //           _countNewMembers = value.length;
-      //         })
-      //       });
+      getAllNewMembers().then((value) => {
+            setState(() {
+              _countNewMembers = value.length;
+              _newmembers = value;
+            })
+          });
     });
   }
 

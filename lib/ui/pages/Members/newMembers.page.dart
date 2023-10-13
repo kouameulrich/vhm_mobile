@@ -243,59 +243,61 @@ class _NewMembersPageState extends State<NewMembersPage> {
 
   onSave() async {
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-    // int dernierIdMembre = await dbHandler.getDernierIdMembre();
 
-    // Vérifiez si le membre existe déjà en fonction de certains critères, par exemple, le numéro de téléphone
+    // Vérifiez si le membre existe déjà en fonction du numéro de téléphone
     bool memberExists =
         await dbHandler.checkMemberExists(memberPhoneController.text);
 
-    if (memberExists) {
-      // Affichez un message d'erreur indiquant que le membre existe déjà
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text(
-              'Erreur',
-              style: TextStyle(color: Defaults.blueAppBar),
-            ),
-            content: SizedBox(
-              height: 140,
-              child: Column(
-                children: [
-                  Lottie.asset(
-                    'animations/error-dialog.json',
-                    repeat: true,
-                    reverse: true,
-                    fit: BoxFit.cover,
-                    height: 120,
-                  ),
-                  const Text(
-                    'Vous êtes déjà membre .',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      if (_formKey.currentState!.validate()) {
-        // Affichez la boîte de dialogue de confirmation si le membre n'existe pas
+    if (_formKey.currentState!.validate()) {
+      print('Remplir tout les champs');
+      if (memberExists) {
+        // Affichez un message d'erreur indiquant que le membre existe déjà
         showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Text(
+              title: Text(
+                'Erreur',
+                style: TextStyle(color: Defaults.blueAppBar),
+              ),
+              content: SizedBox(
+                height: 140,
+                child: Column(
+                  children: [
+                    Lottie.asset(
+                      'animations/error-dialog.json',
+                      repeat: true,
+                      reverse: true,
+                      fit: BoxFit.cover,
+                      height: 120,
+                    ),
+                    Text(
+                      'Vous êtes déjà membre.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+
+        print('Membre existe déjà');
+      } else {
+        // Affichez une boîte de dialogue de confirmation si le membre n'existe pas
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text(
                 'Alerte Nouvelle Personne',
                 textAlign: TextAlign.center,
               ),
@@ -304,13 +306,13 @@ class _NewMembersPageState extends State<NewMembersPage> {
                 child: Column(
                   children: [
                     Lottie.asset(
-                      'animations/success.json',
+                      'animations/notifs.json',
                       repeat: true,
                       reverse: true,
                       fit: BoxFit.cover,
                       height: 110,
                     ),
-                    const Text(
+                    Text(
                       'Voulez-vous valider votre inscription ?',
                       textAlign: TextAlign.center,
                     ),
@@ -322,11 +324,10 @@ class _NewMembersPageState extends State<NewMembersPage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Non'),
+                  child: Text('Non'),
                 ),
                 TextButton(
                   onPressed: () async {
-                    // int nouvelIdMembre = dernierIdMembre + 1;
                     newMembers = NewMembers(
                       memberLastName: membersLastNameController.text,
                       memberFirstName: membersFistNameController.text,
@@ -344,12 +345,13 @@ class _NewMembersPageState extends State<NewMembersPage> {
                           builder: (context) => ListMembersPage()),
                     );
                   },
-                  child: const Text('Oui'),
+                  child: Text('Oui'),
                 )
               ],
             );
           },
         );
+        print('Membre enregistré');
       }
     }
   }

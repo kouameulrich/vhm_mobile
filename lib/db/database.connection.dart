@@ -3,8 +3,8 @@ import 'package:path/path.dart';
 
 class DatabaseConnection {
   Future<Database> setDatabase() async {
-    var path = join(await getDatabasesPath(), 'db_crud');
-    await deleteDatabase(path);
+    var path = join(await getDatabasesPath(), 'vhm_crud');
+    //await deleteDatabase(path);
     var database =
         await openDatabase(path, version: 1, onCreate: _createDatabase);
     return database;
