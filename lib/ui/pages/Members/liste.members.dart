@@ -28,8 +28,6 @@ class _ListMembersPageState extends State<ListMembersPage> {
   String? _selectContract;
   List<Members> _members = [];
   Members? members;
-  // Utilisez un Map pour stocker l'état (activé/désactivé) de chaque membre
-  Map<int, bool> memberButtonStates = {};
 
   TextEditingController searchController = TextEditingController();
 
@@ -61,10 +59,7 @@ class _ListMembersPageState extends State<ListMembersPage> {
       getAllMembers().then((value) {
         setState(() {
           _members = value;
-          // Initialisez l'état de chaque membre à true (bouton activé)
-          for (var member in _members) {
-            memberButtonStates[member.memberId] = member.flag == 0;
-          }
+
           isLoading = false; // Fin du chargement
           // Dissimulez le LoadingIndicatorDialog une fois que les données sont chargées
           LoadingIndicatorDialog().dismiss();
@@ -184,33 +179,31 @@ class _ListMembersPageState extends State<ListMembersPage> {
                         ),
                       ),
                       onChanged: (value) {
-                        searchController.addListener(() {
-                          setState(() {
-                            getAllMembers().then((memberss) {
-                              _members = memberss
-                                  .where(
-                                      (element) =>
-                                          element.memberFullName!
-                                              .toLowerCase()
-                                              .contains(searchController.text
-                                                  .toString()
-                                                  .toLowerCase()) ||
-                                          element.memberFirstName!.toLowerCase().contains(
-                                              searchController.text
-                                                  .toString()
-                                                  .toLowerCase()) ||
-                                          element.memberLastName!
-                                              .toLowerCase()
-                                              .contains(searchController.text
-                                                  .toString()
-                                                  .toLowerCase()) ||
-                                          element.memberPhone!
-                                              .toLowerCase()
-                                              .contains(searchController.text
-                                                  .toString()
-                                                  .toLowerCase()))
-                                  .toList();
-                            });
+                        setState(() {
+                          getAllMembers().then((memberss) {
+                            _members = memberss
+                                .where(
+                                    (element) =>
+                                        element.memberFullName!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberFirstName!.toLowerCase().contains(
+                                            searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberLastName!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()) ||
+                                        element.memberPhone!
+                                            .toLowerCase()
+                                            .contains(searchController.text
+                                                .toString()
+                                                .toLowerCase()))
+                                .toList();
                           });
                         });
                       },
@@ -265,73 +258,55 @@ class _ListMembersPageState extends State<ListMembersPage> {
                         ),
                         trailing: ElevatedButton(
                           child: Text('Valider'),
-                          onPressed:
-                              !memberButtonStates[_members[index].memberId]!
-                                  ? null
-                                  : () async {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            AlertDialog(
-                                          title: Text('Alerte Présence'),
-                                          content: SizedBox(
-                                            height: 140,
-                                            child: Column(
-                                              children: [
-                                                Lottie.asset(
-                                                  'animations/read.json',
-                                                  repeat: true,
-                                                  reverse: true,
-                                                  fit: BoxFit.cover,
-                                                  height: 100,
-                                                ),
-                                                const Text(
-                                                  'Voulez-vous confirmer votre présence ?',
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ],
+                          onPressed: _members[index].flag == 0
+                              ? () async {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      title: Text('Alerte Présence'),
+                                      content: SizedBox(
+                                        height: 140,
+                                        child: Column(
+                                          children: [
+                                            Lottie.asset(
+                                              'animations/read.json',
+                                              repeat: true,
+                                              reverse: true,
+                                              fit: BoxFit.cover,
+                                              height: 100,
                                             ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, 'Non'),
-                                              child: Text('Non'),
-                                            ),
-                                            TextButton(
-                                              child: Text('Oui'),
-                                              onPressed: () async {
-                                                // Fermez le contexte
-                                                Navigator.pop(context, 'Oui');
-                                                print('Context fermé');
-
-                                                setState(() {
-                                                  memberButtonStates[
-                                                          _members[index]
-                                                              .memberId] =
-                                                      false; // Désactivez le bouton
-                                                });
-                                                print('bouton grisé');
-
-                                                // Mettez à jour le membre avec le nouveau drapeau
-                                                _members[index].flag =
-                                                    1; // Assurez-vous que '1' est le nouveau drapeau
-                                                try {
-                                                  // Vous pouvez également mettre à jour le membre localement si nécessaire
-                                                  await dbHandler.updateMembers(
-                                                      _members[index]);
-                                                  print('Membres mise à jour');
-                                                } catch (e) {
-                                                  // Gérez les erreurs en conséquence
-                                                  print(
-                                                      'Erreur lors de la mise à jour du membre : $e');
-                                                }
-                                              },
+                                            const Text(
+                                              'Voulez-vous confirmer votre présence ?',
+                                              textAlign: TextAlign.center,
                                             ),
                                           ],
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context, 'Non');
+                                          },
+                                          child: Text('Non'),
+                                        ),
+                                        TextButton(
+                                          child: Text('Oui'),
+                                          onPressed: () async {
+                                            Navigator.pop(context, 'Oui');
+                                            // Mettez à jour le flag du membre
+                                            setState(() {
+                                              _members[index].flag = 1;
+                                              dbHandler.updateMembers(
+                                                  _members[index]);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              : null,
                         ),
                       );
                     },

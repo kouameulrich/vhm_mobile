@@ -130,10 +130,10 @@ class _ResetMembersDataPageState extends State<ResetMembersDataPage> {
     LoadingIndicatorDialog().show(context);
 
     try {
-      List<Members> _members = await apiService.getAllMembers();
-
-      for (var members in _members) {
-        await dbHandler.deleteAllMembers();
+      await dbHandler.deleteAllMembers();
+      void deleteLocalFile(String key) async {
+        final secureStorage = FlutterSecureStorage();
+        await secureStorage.delete(key: key);
       }
 
       LoadingIndicatorDialog().dismiss();
